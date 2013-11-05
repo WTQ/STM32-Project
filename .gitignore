@@ -1,4 +1,7 @@
 Output/*
+Lis/*
 JlinkLog.txt
 *.dep
 *.bak
+myucos.uvopt
+myucos.uvproj
