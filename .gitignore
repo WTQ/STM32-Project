@@ -3,5 +3,5 @@ Lis/*
 JlinkLog.txt
 *.dep
 *.bak
-myucos.uvopt
-myucos.uvproj
+/myucos.uvopt
+/myucos.uvproj
