@@ -5,3 +5,4 @@ JlinkLog.txt
 *.bak
 /myucos.uvopt
 /myucos.uvproj
+/myucos.uvgui.*
