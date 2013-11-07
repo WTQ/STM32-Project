@@ -220,6 +220,8 @@ void USART1_IRQHandler(void)
 	OS_ENTER_CRITICAL();                                        // Tell uC/OS-II that we are starting an ISR                
 	OSIntNesting++;
 	OS_EXIT_CRITICAL();
+
+//	OSIntEnter();
 	GSM_RxTxISRHandler();
 	OSIntExit();
 }
