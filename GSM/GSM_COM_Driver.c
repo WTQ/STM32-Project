@@ -58,10 +58,12 @@ void  GSM_InitTarget(void)
 	USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
 	USART_Init(USART1, &USART_InitStructure);
 
-	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+	USART_ITConfig(USART1, USART_IT_RXNE, DISABLE);
 
 	USART_Cmd(USART1, ENABLE);
-
+	
+	// 添加用来清除发送第一个字节的问题
+	// USART_GetFlagStatus(USART2, USART_FLAG_TC);
 }
 
 /*

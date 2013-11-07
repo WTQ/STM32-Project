@@ -76,7 +76,7 @@ static void App_GPRSSend(void* p_arg)
 				GPRSBuffer[0] = 0;
 				GSM_Post_Record(GPRSBuffer, &WMRecord);
 				GSM_GPRS_SEND((unsigned char *) GPRSBuffer);
-				OSTimeDlyHMSM(0, 0, 3,0);
+				OSTimeDlyHMSM(0, 0, 4, 0);
 				GRRS_TCP_Close();
 				Next_Record.Record_ID++;
 			}
@@ -85,10 +85,10 @@ static void App_GPRSSend(void* p_arg)
 			GPRSBuffer[0] = 0;
 			GSM_Post_Beat(GPRSBuffer);
 			GSM_GPRS_SEND((unsigned char *) GPRSBuffer);
-			OSTimeDlyHMSM(0, 0, 3,0);
+			OSTimeDlyHMSM(0, 0, 4,0);
 			GRRS_TCP_Close();
 		}
-		OSTimeDlyHMSM(0, 0, 2, 0);
+		OSTimeDlyHMSM(0, 0, 1, 0);
 	}
 }
 

@@ -127,6 +127,9 @@ void  GSM_TxHandler (void)
 ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇*/
 void GSM_Configuration(void)
 {
+  // 清除TC标志，防止第一个发送时的溢出现象
+  USART_ClearFlag(USART1,USART_FLAG_TC);
+  
   GSM_TxString("AT\r\n");
   OSTimeDlyHMSM(0, 0, 1,0);
   GSM_TxString("AT+IPR=115200\r\n");
