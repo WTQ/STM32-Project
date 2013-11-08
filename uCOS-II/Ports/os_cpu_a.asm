@@ -129,13 +129,13 @@ OSStartHighRdy
      ORR     R0, R0, #0x02
      MSR     CONTROL, R0
      
-     LDR     R1, __OS_TCBCur
+     LDR     R1, =OSTCBCur
      MRS     R0, PSP
      SUBS    R0, R0, #0x24
      STR     R0, [R1]
      
      
-     LDR     R0, __OS_Running                                    ; OSRunning = TRUE
+     LDR     R0, =OSRunning                                    ; OSRunning = TRUE
      MOVS    R1, #1
      STRB    R1, [R0]
 
@@ -221,24 +221,24 @@ OS_CPU_PendSVHandler
 	SUBS    R0, R0, #0x20                                       ; save remaining regs r4-11 on process stack
 	STM     R0, {R4-R11}
 	
-	LDR     R1, __OS_TCBCur                                     ; OSTCBCur->OSTCBStkPtr = SP;
+	LDR     R1, =OSTCBCur                                     ; OSTCBCur->OSTCBStkPtr = SP;
 	LDR     R1, [R1]
 	STR     R0, [R1]                                            ; R0 is SP of process being switched out
 	
 	                                                        ; At this point, entire context of process has been saved
 OS_CPU_PendSVHandler_nosave
 	PUSH    {R14}                                               ; need to save LR exc_return value
-	LDR     R0, __OS_TaskSwHook                                 ; OSTaskSwHook();
+	LDR     R0, =OSTaskSwHook                                 ; OSTaskSwHook();
 	BLX     R0
 	POP     {R14}
 	
-	LDR     R0, __OS_PrioCur                                    ; OSPrioCur = OSPrioHighRdy;
-	LDR     R1, __OS_PrioHighRdy
+	LDR     R0, =OSPrioCur                                    ; OSPrioCur = OSPrioHighRdy;
+	LDR     R1, =OSPrioHighRdy
 	LDRB    R2, [R1]
 	STRB    R2, [R0]
 	
-	LDR     R0, __OS_TCBCur                                     ; OSTCBCur  = OSTCBHighRdy;
-	LDR     R1, __OS_TCBHighRdy
+	LDR     R0, =OSTCBCur                                     ; OSTCBCur  = OSTCBHighRdy;
+	LDR     R1, =OSTCBHighRdy
 	LDR     R2, [R1]
 	STR     R2, [R0]
 	
@@ -248,4 +248,4 @@ OS_CPU_PendSVHandler_nosave
 	MSR     PSP, R0                                             ; load PSP with new process SP
 	;ORR     LR, LR, #0x04                                       ; ensure exception return uses process stack
 	BX      LR 
-	
+	END
