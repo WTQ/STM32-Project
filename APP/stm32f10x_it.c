@@ -28,6 +28,7 @@
 #include "dsp/usr_dsp.h"
 #include "usart/usr_usart2.h"
 #include "GSM.h"
+#include "gsm_driver.h"
 
 extern void LwIP_Pkt_Handle(void);
 extern int TimFlag;
@@ -145,6 +146,13 @@ void SysTick_Handler(void)
                                        
 }
 
+// TIM2中断服务程序，作为SIM900超时用
+void TIM2_IRQHandler(void)
+{
+	OSIntEnter();
+	GSM_TimeHandle();
+	OSIntExit();
+}
 
 void ETH_IRQHandler(void)
 {
@@ -162,11 +170,6 @@ void ETH_IRQHandler(void)
 	                                                                  
 	OSIntExit();
 }
-
-void TIM2_IRQHandler(void)
-{
-}
-
 
 /**
   * @brief  OTG_FS_IRQHandler
