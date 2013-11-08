@@ -45,7 +45,7 @@ void GPRS_TCP_Connet(char *ip, char *port)
 	GSM_TxString("\",");
 	GSM_TxString((INT8U *) port);
 	GSM_TxString("\r\n");
-	OSTimeDlyHMSM(0, 0, 8, 0);
+	OSTimeDlyHMSM(0, 0, 4, 0);
 }
 
 void GPRS_TCP_Send(void)

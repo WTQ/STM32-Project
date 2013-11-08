@@ -250,10 +250,11 @@ void GSM_GPRS_SEND(unsigned char *str)
   INT8U	 buf[50];
 
   LEN=strlen((char *)str);
-  sprintf((char *)buf,"AT+CIPSEND=%d\r\n",LEN);
+  sprintf((char *)buf,"AT+CIPSEND\r\n");
   GSM_TxString(buf);
   OSTimeDlyHMSM(0, 0, 0,500);
   GSM_TxString(str);
+  GSM_TxChar(0x1A);
   OSTimeDlyHMSM(0, 0, 0,500);
  }
 /*
