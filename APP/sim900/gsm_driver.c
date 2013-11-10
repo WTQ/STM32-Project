@@ -27,7 +27,7 @@ void GSM_TimeInit(void)
 	// 启用TIM2的时钟
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 	
-	// 设置TIM2的时基单元
+	// 开启命令超时
 	GSM_SetTimeCommand();
 }
 
