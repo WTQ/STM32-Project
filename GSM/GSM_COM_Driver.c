@@ -154,7 +154,7 @@ void  GSM_RxTxISRHandler(void)
 void  GSM_TxChar(INT8U c)
 {
 	USART_SendData(USART1, c);
-	while(USART_GetFlagStatus(USART1, USART_FLAG_TC)==RESET);
+	while(USART_GetFlagStatus(USART1, USART_FLAG_TC)==RESET); // 这里设置了向usart1端口传输数据，需要扩展
 
 }
 
@@ -170,6 +170,7 @@ void  GSM_TxString(INT8U *str)
 ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇
 ▇    							禁止GSM串口发送中断             								  ▇
 ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇*/
+
 void  GSM_TxIntDis (void)
 {
 #if (GSM_COMM_SEL == GSM_UART_1)
@@ -210,7 +211,7 @@ void NVIC_Config(void)
   /* Configure the NVIC Preemption Priority Bits */ 
   NVIC_InitTypeDef NVIC_InitStructure; 
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
-  NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn; //串口通道
+  NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn; //串口通道，这里设置了向usart1端口，需要扩展
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;//
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1; //
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
