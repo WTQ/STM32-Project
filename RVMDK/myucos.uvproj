@@ -939,6 +939,63 @@
         </Group>
         <Group>
           <GroupName>USR_SIM900</GroupName>
+          <Files>
+            <File>
+              <FileName>gsm_base.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP\sim900\gsm_base.c</FilePath>
+            </File>
+            <File>
+              <FileName>gsm_base.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP\sim900\gsm_base.h</FilePath>
+            </File>
+            <File>
+              <FileName>gsm_core.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP\sim900\gsm_core.c</FilePath>
+            </File>
+            <File>
+              <FileName>gsm_core.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP\sim900\gsm_core.h</FilePath>
+            </File>
+            <File>
+              <FileName>gsm_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP\sim900\gsm_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>gsm_driver.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP\sim900\gsm_driver.h</FilePath>
+            </File>
+            <File>
+              <FileName>gsm_gprs.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP\sim900\gsm_gprs.c</FilePath>
+            </File>
+            <File>
+              <FileName>gsm_gprs.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP\sim900\gsm_gprs.h</FilePath>
+            </File>
+            <File>
+              <FileName>gsm_sms.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP\sim900\gsm_sms.c</FilePath>
+            </File>
+            <File>
+              <FileName>gsm_sms.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP\sim900\gsm_sms.h</FilePath>
+            </File>
+            <File>
+              <FileName>gsm_type.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP\sim900\gsm_type.h</FilePath>
+            </File>
+          </Files>
         </Group>
       </Groups>
     </Target>

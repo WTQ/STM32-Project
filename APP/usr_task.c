@@ -5,6 +5,8 @@
  */
 #include "usr_task.h"
 
+#include "gsm_driver.h"
+
 // 任务堆栈空间
 static OS_STK App_TaskStartStk[APP_TASK_START_STK_SIZE];
 static OS_STK App_LWIPStk[LWIP_TASK_STK_SIZE];
@@ -64,6 +66,9 @@ static void App_GPRSSend(void* p_arg)
 	
 	// GSM模块初始化
 	GSM_Init();
+	
+	// GSM_TimeInit
+	GSM_TimeInit();
 	
 	GPRS_Init();
 	
