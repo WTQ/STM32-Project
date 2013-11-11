@@ -27,7 +27,6 @@ INT8U Task_Init(void)
 
 static void App_TaskStart(void *p_arg)
 {
-	(void)p_arg;
 	OS_CPU_SysTickInit();
 #if(OS_TASK_STAT_EN > 0)
 	OSStatInit();
@@ -35,7 +34,9 @@ static void App_TaskStart(void *p_arg)
 	App_TaskCreate();
 	while(1)
 	{
-		OSTimeDlyHMSM(0,0,1,0);
+		// 挂起任务
+		OSTaskSuspend(OS_PRIO_SELF);
+		OSTimeDlyHMSM(0,0,10,0);
 	}
 }
 
@@ -52,9 +53,6 @@ static void App_TaskCreate(void)
 	// 建立GSM发送的任务
 	// OSTaskCreateExt(GSM_Task, NULL, (App_GSMStk + GSM_TASK_STK_SIZE - 1), GSM_TASK_PRIO, GSM_TASK_PRIO, 
 	//	App_GSMStk, GSM_TASK_STK_SIZE, NULL,  OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
-	
-	// 挂起任务
-	// OSTaskSuspend(OS_PRIO_SELF);
 }
 
 static void App_GPRSSend(void* p_arg)
@@ -78,7 +76,7 @@ static void App_GPRSSend(void* p_arg)
 				GPRSBuffer[0] = 0;
 				GSM_Post_Record(GPRSBuffer, &WMRecord);
 				GSM_GPRS_SEND((unsigned char *) GPRSBuffer);
-				OSTimeDlyHMSM(0, 0, 3,0);
+				OSTimeDlyHMSM(0, 0, 5, 0);
 				GRRS_TCP_Close();
 				Next_Record.Record_ID++;
 			}
@@ -87,16 +85,15 @@ static void App_GPRSSend(void* p_arg)
 			GPRSBuffer[0] = 0;
 			GSM_Post_Beat(GPRSBuffer);
 			GSM_GPRS_SEND((unsigned char *) GPRSBuffer);
-			OSTimeDlyHMSM(0, 0, 3,0);
+			OSTimeDlyHMSM(0, 0, 4,0);
 			GRRS_TCP_Close();
 		}
-		OSTimeDlyHMSM(0, 0, 2, 0);
+		OSTimeDlyHMSM(0, 0, 1, 0);
 	}
 }
 
 static void App_LWIP(void* p_arg)
 {
-	(void) p_arg;
 	LwIP_Init();
 	OSTimeDlyHMSM(0,0,1,0);
 	Server_init();

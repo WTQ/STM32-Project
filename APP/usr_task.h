@@ -18,10 +18,10 @@
 #include "netconf.h"
 
 // 任务堆栈大小配置
-#define  APP_TASK_START_STK_SIZE               ((INT32U) 128)
+#define  APP_TASK_START_STK_SIZE               ((INT32U) 64)
 #define  LWIP_TASK_STK_SIZE					   ((INT32U) 1024)
 #define  GPRS_TASK_STK_SIZE					   ((INT32U) 1024)
-#define  GSM_TASK_STK_SIZE					   ((INT32U) 256)
+#define  GSM_TASK_STK_SIZE					   ((INT32U) 128)
 
 // 任务优先级分配
 #define  APP_TASK_START_PRIO                   ((INT8U) 3)
@@ -35,10 +35,10 @@ typedef struct _Next_Send {
 	uint32_t index;
 } Next_Send;
 
-// 任务初始化函数
+// ucos创建初始化任务函数
 INT8U Task_Init(void);
 
-// ucos统计任务
+// 初始化任务处理函数
 static void App_TaskStart(void *p_arg);
 
 // APP任务创建函数

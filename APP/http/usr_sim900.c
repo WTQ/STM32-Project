@@ -14,7 +14,7 @@ void GPRS_Init(void)
 	OSTimeDlyHMSM(0, 0, 1, 0);
 	
 	// 设置APN
-	GSM_TxString("AT+CSTT\rn");
+	GSM_TxString("AT+CSTT\r\n");
 	OSTimeDlyHMSM(0, 0, 1, 0);
 	
 	// 激活移动场景
@@ -45,7 +45,7 @@ void GPRS_TCP_Connet(char *ip, char *port)
 	GSM_TxString("\",");
 	GSM_TxString((INT8U *) port);
 	GSM_TxString("\r\n");
-	OSTimeDlyHMSM(0, 0, 8, 0);
+	OSTimeDlyHMSM(0, 0, 4, 0);
 }
 
 void GPRS_TCP_Send(void)
@@ -55,8 +55,8 @@ void GPRS_TCP_Send(void)
 void GRRS_TCP_Close(void)
 {
 	// 关闭TCP连接
-	GSM_TxString("AT+CIPCLOSE=0\r\n");
-	OSTimeDlyHMSM(0, 0, 2,0);
+	GSM_TxString("AT+CIPCLOSE=1\r\n");
+	OSTimeDlyHMSM(0, 0, 1, 0);
 }
 
 void GRPS_TCP_Recv(void)

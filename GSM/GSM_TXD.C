@@ -127,6 +127,9 @@ void  GSM_TxHandler (void)
 ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇*/
 void GSM_Configuration(void)
 {
+  // 清除TC标志，防止第一个发送时的溢出现象
+  USART_ClearFlag(USART1,USART_FLAG_TC);
+  
   GSM_TxString("AT\r\n");
   OSTimeDlyHMSM(0, 0, 1,0);
   GSM_TxString("AT+IPR=115200\r\n");
@@ -247,10 +250,11 @@ void GSM_GPRS_SEND(unsigned char *str)
   INT8U	 buf[50];
 
   LEN=strlen((char *)str);
-  sprintf((char *)buf,"AT+CIPSEND=%d\r\n",LEN);
+  sprintf((char *)buf,"AT+CIPSEND\r\n");
   GSM_TxString(buf);
   OSTimeDlyHMSM(0, 0, 0,500);
   GSM_TxString(str);
+  GSM_TxChar(0x1A);
   OSTimeDlyHMSM(0, 0, 0,500);
  }
 /*

@@ -148,11 +148,7 @@ void SysTick_Handler(void)
 
 void ETH_IRQHandler(void)
 {
-	OS_CPU_SR  cpu_sr;
-	
-	OS_ENTER_CRITICAL();                                        // Tell uC/OS-II that we are starting an ISR                
-	OSIntNesting++;
-	OS_EXIT_CRITICAL();
+	OSIntEnter();
 	                                            // Tell uC/OS-II that we are leaving the ISR
 	/* Handles all the received frames */
 	while(ETH_GetRxPktSize() != 0) 
@@ -186,28 +182,16 @@ void OTG_FS_IRQHandler(void)
 
 void USART2_IRQHandler(void)
 {
-	OS_CPU_SR  cpu_sr;
-	OS_ENTER_CRITICAL();                                        // Tell uC/OS-II that we are starting an ISR                
-	OSIntNesting++;
-	OS_EXIT_CRITICAL();
-	
-	// 处理程序
+	OSIntEnter();
 	USART2_Handle();
-	
 	OSIntExit();
 }
 
 void USART3_IRQHandler(void)
 {
-	OS_CPU_SR  cpu_sr;
-	OS_ENTER_CRITICAL();                                        // Tell uC/OS-II that we are starting an ISR                
-	OSIntNesting++;
-	OS_EXIT_CRITICAL();
-	
-	// 处理程序
+	OSIntEnter();
 	DSP_ReseveMsg();
 	Handle_Water();
-	
 	OSIntExit();
 }
 
@@ -215,11 +199,7 @@ void USART3_IRQHandler(void)
 
 void USART1_IRQHandler(void)
 {
-	OS_CPU_SR  cpu_sr;
-	
-	OS_ENTER_CRITICAL();                                        // Tell uC/OS-II that we are starting an ISR                
-	OSIntNesting++;
-	OS_EXIT_CRITICAL();
+	OSIntEnter();
 	GSM_RxTxISRHandler();
 	OSIntExit();
 }

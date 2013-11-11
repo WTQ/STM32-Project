@@ -115,25 +115,39 @@ OS_CPU_SR_Restore
 ;********************************************************************************************************
 
 OSStartHighRdy
-    LDR     R0, =NVIC_SYSPRI2                                   ; Set the PendSV exception priority
-    LDR     R1, =NVIC_PENDSV_PRI
-    STRB    R1, [R0]
+     LDR     R0, =NVIC_SYSPRI2                                   ; Set the PendSV exception priority
+     LDR     R1, =NVIC_PENDSV_PRI
+     STRB    R1, [R0]
 
-    MOVS    R0, #0                                              ; Set the PSP to 0 for initial context switch call
-    MSR     PSP, R0
+     ;MOVS    R0, #0                                              ; Set the PSP to 0 for initial context switch call
+     ;MSR     PSP, R0
+     
+     MRS     R0, MSP
+     MSR     PSP, R0
+     
+     MRS     R0, CONTROL
+     ORR     R0, R0, #0x02
+     MSR     CONTROL, R0
+     
+     LDR     R1, =OSTCBCur
+     MRS     R0, PSP
+     SUBS    R0, R0, #0x24
+     STR     R0, [R1]
+     
+     
+     LDR     R0, =OSRunning                                    ; OSRunning = TRUE
+     MOVS    R1, #1
+     STRB    R1, [R0]
 
-    LDR     R0, =OSRunning                                      ; OSRunning = TRUE
-    MOVS    R1, #1
-    STRB    R1, [R0]
-
-    LDR     R0, =NVIC_INT_CTRL                                  ; Trigger the PendSV exception (causes context switch)
-    LDR     R1, =NVIC_PENDSVSET
-    STR     R1, [R0]
-
-    CPSIE   I                                                   ; Enable interrupts at processor level
+     LDR     R0, =NVIC_INT_CTRL   ; Trigger the PendSV exception (causes context switch)
+     LDR     R1, =NVIC_PENDSVSET
+     STR     R1, [R0]
+     
+     CPSIE   I              ; Enable interrupts at processor level
 
 OSStartHang
-    B       OSStartHang                                         ; Should never get here
+     NOP
+     B       OSStartHang          ;Should never get here
 
 
 ;********************************************************************************************************
@@ -201,40 +215,37 @@ OSIntCtxSw
 ;********************************************************************************************************
 
 OS_CPU_PendSVHandler
-    CPSID   I                                                   ; Prevent interruption during context switch
-    MRS     R0, PSP                                             ; PSP is process stack pointer
-    CBZ     R0, OS_CPU_PendSVHandler_nosave                     ; Skip register save the first time
-
-    SUBS    R0, R0, #0x20                                       ; Save remaining regs r4-11 on process stack
-    STM     R0, {R4-R11}
-
-    LDR     R1, =OSTCBCur                                       ; OSTCBCur->OSTCBStkPtr = SP;
-    LDR     R1, [R1]
-    STR     R0, [R1]                                            ; R0 is SP of process being switched out
-
-                                                                ; At this point, entire context of process has been saved
+	MRS     R0, PSP                                             ; PSP is process stack pointer
+	;CBZ     R0, OSPendSV_nosave                                 ; skip register save the first time
+	
+	SUBS    R0, R0, #0x20                                       ; save remaining regs r4-11 on process stack
+	STM     R0, {R4-R11}
+	
+	LDR     R1, =OSTCBCur                                     ; OSTCBCur->OSTCBStkPtr = SP;
+	LDR     R1, [R1]
+	STR     R0, [R1]                                            ; R0 is SP of process being switched out
+	
+	                                                        ; At this point, entire context of process has been saved
 OS_CPU_PendSVHandler_nosave
-    PUSH    {R14}                                               ; Save LR exc_return value
-    LDR     R0, =OSTaskSwHook                                   ; OSTaskSwHook();
-    BLX     R0
-    POP     {R14}
-
-    LDR     R0, =OSPrioCur                                      ; OSPrioCur = OSPrioHighRdy;
-    LDR     R1, =OSPrioHighRdy
-    LDRB    R2, [R1]
-    STRB    R2, [R0]
-
-    LDR     R0, =OSTCBCur                                       ; OSTCBCur  = OSTCBHighRdy;
-    LDR     R1, =OSTCBHighRdy
-    LDR     R2, [R1]
-    STR     R2, [R0]
-
-    LDR     R0, [R2]                                            ; R0 is new process SP; SP = OSTCBHighRdy->OSTCBStkPtr;
-    LDM     R0, {R4-R11}                                        ; Restore r4-11 from new process stack
-    ADDS    R0, R0, #0x20
-    MSR     PSP, R0                                             ; Load PSP with new process SP
-    ORR     LR, LR, #0x04                                       ; Ensure exception return uses process stack
-    CPSIE   I
-    BX      LR                                                  ; Exception return will restore remaining context
-
-    END
+	PUSH    {R14}                                               ; need to save LR exc_return value
+	LDR     R0, =OSTaskSwHook                                 ; OSTaskSwHook();
+	BLX     R0
+	POP     {R14}
+	
+	LDR     R0, =OSPrioCur                                    ; OSPrioCur = OSPrioHighRdy;
+	LDR     R1, =OSPrioHighRdy
+	LDRB    R2, [R1]
+	STRB    R2, [R0]
+	
+	LDR     R0, =OSTCBCur                                     ; OSTCBCur  = OSTCBHighRdy;
+	LDR     R1, =OSTCBHighRdy
+	LDR     R2, [R1]
+	STR     R2, [R0]
+	
+	LDR     R0, [R2]                                            ; R0 is new process SP; SP = OSTCBHighRdy->OSTCBStkPtr;
+	LDM     R0, {R4-R11}                                        ; restore r4-11 from new process stack
+	ADDS    R0, R0, #0x20
+	MSR     PSP, R0                                             ; load PSP with new process SP
+	;ORR     LR, LR, #0x04                                       ; ensure exception return uses process stack
+	BX      LR 
+	END
