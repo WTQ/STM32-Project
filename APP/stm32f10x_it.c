@@ -203,7 +203,8 @@ void USART3_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
 	OSIntEnter();
-	GSM_RxTxISRHandler();
+	//GSM_RxTxISRHandler();
+	GSM_USART_Rx();
 	OSIntExit();
 }
 

@@ -184,8 +184,8 @@ void GSM_USART_Rx(void)
 		USART_ReceiveData(usart);					// 读DR 
 	} 
 	if (USART_GetITStatus(usart, USART_IT_RXNE) != RESET) {
-		rx_data = USART_ReceiveData(usart) & 0xFF; 	
-		//GSM_RxHandler(rx_data);
+		rx_data = USART_ReceiveData(usart) & 0xFF;
+		// GSM_RxHandler(rx_data);
 		// 有可能这个函数还没有执行完，数据又到来，就会产生USART_FLAG_ORE中断	
 		USART_ClearITPendingBit(usart, USART_IT_RXNE);
 	}
