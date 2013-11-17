@@ -11,6 +11,8 @@
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_tim.h"
 
+#include "gsm_core.h"
+
 void GSM_TimeInit(void)
 {
 	NVIC_InitTypeDef NVIC_InitStructure;
@@ -81,16 +83,14 @@ void GSM_ShutTime(void)
 	TIM_ITConfig(TIM2, TIM_IT_Update, DISABLE);
 }
 
-int iTest = 0;
 void GSM_TimeHandle(void)
 {
 	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
 		// 先清除中断标志位
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-		++iTest;
-		if(iTest == 100) {
-			GSM_ShutTime();
-		}
+		
+		// 调用core层超时处理函数
+		Timeout_Handle();
 	}
 }
 
@@ -184,8 +184,8 @@ void GSM_USART_Rx(void)
 		USART_ReceiveData(usart);					// 读DR 
 	} 
 	if (USART_GetITStatus(usart, USART_IT_RXNE) != RESET) {
-		rx_data = USART_ReceiveData(usart) & 0xFF;
-		// GSM_RxHandler(rx_data);
+		rx_data = USART_ReceiveData(usart);
+		GSM_CORE_Rx_Handle(rx_data);
 		// 有可能这个函数还没有执行完，数据又到来，就会产生USART_FLAG_ORE中断	
 		USART_ClearITPendingBit(usart, USART_IT_RXNE);
 	}
@@ -196,4 +196,11 @@ void GSM_USART_Init(void)
 	GSM_USART_GPIO();
 	GSM_USART_Config();
 	GSM_USART_NVIC();
+}
+
+void GSM_Driver_Int(void)
+{
+	GSM_TimeInit();
+	GSM_USART_Init();
+	//GSM_Init();
 }

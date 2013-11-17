@@ -43,4 +43,6 @@ void GSM_USART_TxStr(char *str);
 void GSM_USART_Rx(void);
 // 串口初始化
 void GSM_USART_Init(void);
+// 驱动初始化
+void GSM_Driver_Int(void);
 #endif
