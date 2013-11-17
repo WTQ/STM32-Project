@@ -65,10 +65,7 @@ static void App_GPRSSend(void* p_arg)
 	char GPRSBuffer[400];
 	
 	// GSMÄ£¿é³õÊ¼»¯
-	GSM_Init();
-	
-	// GSM_TimeInit
-	GSM_TimeInit();
+	GSM_Driver_Int();
 	
 	GPRS_Init();
 	
