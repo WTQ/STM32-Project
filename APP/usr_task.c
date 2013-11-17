@@ -11,6 +11,7 @@
 static OS_STK App_TaskStartStk[APP_TASK_START_STK_SIZE];
 static OS_STK App_LWIPStk[LWIP_TASK_STK_SIZE];
 static OS_STK App_GPRSStk[GPRS_TASK_STK_SIZE];
+
 // static OS_STK App_GSMStk[GSM_TASK_STK_SIZE];
 
 // 下一个发送的记录
