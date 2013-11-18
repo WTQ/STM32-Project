@@ -13,7 +13,7 @@
 
 #include "gsm_core.h"
 
-void GSM_TimeInit(void)
+void GSM_CommandTimeInit(void)
 {
 	NVIC_InitTypeDef NVIC_InitStructure;
 	
@@ -23,18 +23,33 @@ void GSM_TimeInit(void)
 	// 设置TIM2的中断通道
 	NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 	
 	// 启用TIM2的时钟
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
-	
-	// 开启命令超时
-	GSM_SetTimeCommand();
 }
 
-void GSM_SetTime(uint16_t cnt, uint16_t psc)
+void GSM_DataTimeInit(void)
+{
+	NVIC_InitTypeDef NVIC_InitStructure;
+	
+	// 设置优先级的分组方式
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
+	
+	// 设置TIM3的中断通道
+	NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+	
+	// 启用TIM3的时钟
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);	
+}
+
+void GSM_Set_TIM2(uint16_t cnt, uint16_t psc)
 {
 	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
 	
@@ -62,35 +77,81 @@ void GSM_SetTime(uint16_t cnt, uint16_t psc)
 	TIM_Cmd(TIM2, ENABLE);  
 }
 
+void GSM_Set_TIM3(uint16_t cnt, uint16_t psc)
+{
+	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+	
+	// 先关闭TIM3的使能和中断
+	TIM_Cmd(TIM3, DISABLE);
+	TIM_ITConfig(TIM3, TIM_IT_Update, DISABLE);
+	
+	// 设置时基单元
+	TIM_TimeBaseStructure.TIM_Period = cnt;
+	TIM_TimeBaseStructure.TIM_Prescaler = psc;
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+	
+	// 清除中断挂起位标志
+	TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+	
+	// 使能TIM3预装载寄存器
+	TIM_ARRPreloadConfig(TIM3, ENABLE);
+
+	// 使能TIM3更新事件中断
+	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
+	
+	// 使能TIM3 
+	TIM_Cmd(TIM3, ENABLE);
+}
+
 // 启动命令处理等待超时
 void GSM_SetTimeCommand(void)
 {
 	// 设置10S的超时时间
-	GSM_SetTime(20000u, 36000u);
+	GSM_Set_TIM2(20000u, 36000u);
 }
 
 // 启动接收数据超时
 void GSM_SetTimeData(void)
 {
 	// 设置2个115200波特率的超时时间
-	GSM_SetTime(2u, 6250u);
+	GSM_Set_TIM3(2u, 6250u);
 }
 
-void GSM_ShutTime(void)
+void GSM_ShutTIMCommand(void)
 {
 	// 关闭TIM2的使能和中断
 	TIM_Cmd(TIM2, DISABLE);
 	TIM_ITConfig(TIM2, TIM_IT_Update, DISABLE);
 }
 
-void GSM_TimeHandle(void)
+void GSM_ShutTIMData(void)
+{
+	// 关闭TIM3的使能和中断
+	TIM_Cmd(TIM3, DISABLE);
+	TIM_ITConfig(TIM3, TIM_IT_Update, DISABLE);
+}
+
+void GSM_CommandTimeHandle(void)
 {
 	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
 		// 先清除中断标志位
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 		
-		// 调用core层超时处理函数
-		Timeout_Handle();
+		// 调用core层命令超时处理函数
+		Timeout_Command();
+	}
+}
+
+void GSM_DataTimeHandle(void)
+{
+	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
+		// 先清除中断标志位
+		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+		
+		// 调用core层数据超时处理函数
+		Timeout_Data();
 	}
 }
 
@@ -127,14 +188,12 @@ void GSM_USART_Config(void)
 	USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
 #if (GSM_COMM_SEL == GSM_USART_1)	
 	USART_Init(USART1, &USART_InitStructure);
+	// 清楚TXE标志
+	USART_ClearFlag(USART1, USART_FLAG_TXE);
+	// 清除RXNE标志，防止第一个接收时的丢失现象
+	USART_ClearFlag(USART1, USART_FLAG_RXNE);
 	// 使能USART1外设
 	USART_Cmd(USART1, ENABLE);
-	
-	// 清除TC标志，防止第一个发送时的溢出现象
-	USART_ClearFlag(USART1,USART_FLAG_TC);
-	// 清除RXNE标志，防止第一个接收时的丢失现象
-	USART_ClearFlag(USART1,USART_FLAG_RXNE);
-	
 #endif
 }
 
@@ -156,8 +215,8 @@ void GSM_USART_NVIC(void)
 void GSM_USART_TxChar(UINT8 c)
 {
 #if (GSM_COMM_SEL == GSM_USART_1)
+	while(USART_GetFlagStatus(USART1, USART_FLAG_TXE )== RESET);
 	USART_SendData(USART1, c);
-	while(USART_GetFlagStatus(USART1, USART_FLAG_TC)==RESET);
 #endif	
 }
 
@@ -206,7 +265,8 @@ void GSM_USART_Init(void)
 
 void GSM_Driver_Int(void)
 {
-	GSM_TimeInit();
+	GSM_CommandTimeInit();
+	GSM_DataTimeInit();
 	GSM_USART_Init();
 	//GSM_Init();
 }
