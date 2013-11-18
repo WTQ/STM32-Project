@@ -6,6 +6,7 @@
 #include "usr_task.h"
 
 #include "gsm_driver.h"
+#include "gsm_core.h"
 
 // 任务堆栈空间
 static OS_STK App_TaskStartStk[APP_TASK_START_STK_SIZE];
@@ -67,8 +68,8 @@ static void App_GPRSSend(void* p_arg)
 	// GSM模块初始化
 	GSM_Driver_Int();
 	
-	GPRS_Init();
-	
+//	GPRS_Init();
+	GSM_CORE_AT("AT\r\n");
 	while (1) {
 		if(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
 			while(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
