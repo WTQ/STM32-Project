@@ -129,6 +129,12 @@ void GSM_USART_Config(void)
 	USART_Init(USART1, &USART_InitStructure);
 	// 使能USART1外设
 	USART_Cmd(USART1, ENABLE);
+	
+	// 清除TC标志，防止第一个发送时的溢出现象
+	USART_ClearFlag(USART1,USART_FLAG_TC);
+	// 清除RXNE标志，防止第一个接收时的丢失现象
+	USART_ClearFlag(USART1,USART_FLAG_RXNE);
+	
 #endif
 }
 
