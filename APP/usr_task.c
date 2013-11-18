@@ -70,27 +70,30 @@ static void App_GPRSSend(void* p_arg)
 	
 //	GPRS_Init();
 	GSM_CORE_AT("AT\r\n");
+	GSM_CORE_AT("AT+IPR=115200\r\n");
+	GSM_CORE_AT("ATtest");
+	GSM_CORE_AT("AT\r\n");
 	while (1) {
-		if(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
-			while(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
-				GPRS_TCP_Connet("202.204.81.57","80");
-				index = GetRecordIndexById(Next_Record.Record_ID);
-				GetRecord(&WMRecord, index);
-				GPRSBuffer[0] = 0;
-				GSM_Post_Record(GPRSBuffer, &WMRecord);
-				GSM_GPRS_SEND((unsigned char *) GPRSBuffer);
-				OSTimeDlyHMSM(0, 0, 5, 0);
-				GRRS_TCP_Close();
-				Next_Record.Record_ID++;
-			}
-		} else {
-			GPRS_TCP_Connet("202.204.81.57","80");
-			GPRSBuffer[0] = 0;
-			GSM_Post_Beat(GPRSBuffer);
-			GSM_GPRS_SEND((unsigned char *) GPRSBuffer);
-			OSTimeDlyHMSM(0, 0, 4,0);
-			GRRS_TCP_Close();
-		}
+//		if(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
+//			while(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
+//				GPRS_TCP_Connet("202.204.81.57","80");
+//				index = GetRecordIndexById(Next_Record.Record_ID);
+//				GetRecord(&WMRecord, index);
+//				GPRSBuffer[0] = 0;
+//				GSM_Post_Record(GPRSBuffer, &WMRecord);
+//				GSM_GPRS_SEND((unsigned char *) GPRSBuffer);
+//				OSTimeDlyHMSM(0, 0, 5, 0);
+//				GRRS_TCP_Close();
+//				Next_Record.Record_ID++;
+//			}
+//		} else {
+//			GPRS_TCP_Connet("202.204.81.57","80");
+//			GPRSBuffer[0] = 0;
+//			GSM_Post_Beat(GPRSBuffer);
+//			GSM_GPRS_SEND((unsigned char *) GPRSBuffer);
+//			OSTimeDlyHMSM(0, 0, 4,0);
+//			GRRS_TCP_Close();
+//		}
 		OSTimeDlyHMSM(0, 0, 1, 0);
 	}
 }
