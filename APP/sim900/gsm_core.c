@@ -76,7 +76,6 @@ void GSM_Core_Rx_Echo(UINT8 data)
 			
 			// 进入执行状态
 			GSM_Command_Record.Status = GSM_STATUS_COMMAND_EXECUTE;
-			GSM_SetTimeCommand();
 		} else {
 			// 进入数据态
 			GSM_Command_Record.Status = GSM_STATUS_COMMAND_ERROR;
@@ -92,36 +91,53 @@ void GSM_CORE_AT(char *data)
 	GSM_Command_Record.Tx_Data_Count = strlen(data);
 	GSM_Command_Record.Rx_Data_Count = 0;
 	GSM_Command_Record.Echo_Count = 0;
+	
 	// 切换状态
 	GSM_STATUS = GSM_STATUS_TRANS_COMMAND;
 	GSM_Command_Record.Status = GSM_STATUS_COMMAND_ECHO;
 	
+	// 开启命令超时
+	GSM_SetTimeCommand();
+	
+	// USART发送命令
 	GSM_USART_TxStr(data);
+	
+	while (1) {
+		if ((GSM_STATUS_COMMAND_SUCCESS == GSM_Command_Record.Status)
+				|| (GSM_STATUS_COMMAND_TIMEOUT == GSM_Command_Record.Status) 
+				|| (GSM_STATUS_COMMAND_ERROR == GSM_Command_Record.Status)) {
+			break;
+		}
+	}
+	
+	GSM_ShutTIMCommand();
 }
 
-void Timeout_Handle(void)
+void Timeout_Command(void)
 {
 	if (GSM_STATUS == GSM_STATUS_TRANS_COMMAND) {
-		if (GSM_Command_Record.Status == GSM_STATUS_COMMAND_EXECUTE) {
-			// 标记超时（暂时未用到）
-			GSM_Command_Record.Status = GSM_STATUS_COMMAND_TIMEOUT;
-					
-		} else if (GSM_Command_Record.Status == GSM_STATUS_COMMAND_DATA) {
-			
+	
+		GSM_Command_Record.Status = GSM_STATUS_COMMAND_TIMEOUT;
+		// 切换至数据态，可能更改到上层执行
+		
+		GSM_STATUS = GSM_STATUS_TRANS_DATA;		
+	}
+}
+
+void Timeout_Data(void)
+{
+	if (GSM_STATUS == GSM_STATUS_TRANS_COMMAND) {
+		if (GSM_Command_Record.Status == GSM_STATUS_COMMAND_DATA) {	
 			GSM_Command_Record.Status = GSM_STATUS_COMMAND_SUCCESS;
 			// @todo 上层接收命令态数据函数
 			
 		}
 		// 切换至数据态，可能更改到上层执行
 		GSM_STATUS = GSM_STATUS_TRANS_DATA;
-		GSM_Data_Record.Status = GSM_STATUS_DATA_IDLE;
 		
 	} else if (GSM_STATUS == GSM_STATUS_TRANS_DATA) {
-	
 		GSM_Data_Record.Status = GSM_STATUS_DATA_SUCCESS;
 		// @todo 上层接收数据态数据函数
 		
-		// 切换至IDLE状态，可能更改到上层执行
-		GSM_Data_Record.Status = GSM_STATUS_DATA_IDLE;
 	}
 }
