@@ -46,7 +46,7 @@ void GSM_DataTimeInit(void)
 	NVIC_Init(&NVIC_InitStructure);
 	
 	// 启用TIM3的时钟
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);	
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 }
 
 void GSM_Set_TIM2(uint16_t cnt, uint16_t psc)
@@ -90,7 +90,7 @@ void GSM_Set_TIM3(uint16_t cnt, uint16_t psc)
 	TIM_TimeBaseStructure.TIM_Prescaler = psc;
 	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
 	
 	// 清除中断挂起位标志
 	TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
