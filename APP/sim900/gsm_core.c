@@ -68,27 +68,35 @@ void GSM_Core_Rx_Echo(UINT8 data)
 {
 	GSM_Command_Record.Echo_Data[GSM_Command_Record.Echo_Count++] = data;
 	
-	if ((GSM_Command_Record.Echo_Count == GSM_Command_Record.Tx_Data_Count)
-		&& (strncmp( GSM_Command_Record.Echo_Data, GSM_Command_Record.Tx_Data, GSM_Command_Record.Tx_Data_Count) == 0)) {
+	if ((GSM_Command_Record.Echo_Count == GSM_Command_Record.Tx_Data_Count)) {
 		
-		// 清空回显内容
-		GSM_Command_Record.Echo_Count = 0;
-		// 进入执行状态
-		GSM_Command_Record.Status = GSM_STATUS_COMMAND_EXECUTE;
-		GSM_SetTimeCommand();
+		if (strncmp( (char *)GSM_Command_Record.Echo_Data, 
+			(char *)GSM_Command_Record.Tx_Data, 
+			GSM_Command_Record.Tx_Data_Count) == 0) {
+			
+			// 进入执行状态
+			GSM_Command_Record.Status = GSM_STATUS_COMMAND_EXECUTE;
+			GSM_SetTimeCommand();
+		} else {
+			// 进入数据态
+			GSM_Command_Record.Status = GSM_STATUS_COMMAND_ERROR;
+			GSM_STATUS = GSM_STATUS_TRANS_DATA;
+		}
 	}
 }
 
 void GSM_CORE_AT(char *data)
 {
 	// 记录命令及其长度
-	strcpy(GSM_Command_Record.Tx_Data, data);
+	strcpy((char *)GSM_Command_Record.Tx_Data, data);
 	GSM_Command_Record.Tx_Data_Count = strlen(data);
 	GSM_Command_Record.Rx_Data_Count = 0;
 	GSM_Command_Record.Echo_Count = 0;
 	// 切换状态
 	GSM_STATUS = GSM_STATUS_TRANS_COMMAND;
 	GSM_Command_Record.Status = GSM_STATUS_COMMAND_ECHO;
+	
+	GSM_USART_TxStr(data);
 }
 
 void Timeout_Handle(void)
@@ -105,7 +113,7 @@ void Timeout_Handle(void)
 			
 		}
 		// 切换至数据态，可能更改到上层执行
-		GSM_STATUS == GSM_STATUS_TRANS_DATA;
+		GSM_STATUS = GSM_STATUS_TRANS_DATA;
 		GSM_Data_Record.Status = GSM_STATUS_DATA_IDLE;
 		
 	} else if (GSM_STATUS == GSM_STATUS_TRANS_DATA) {
