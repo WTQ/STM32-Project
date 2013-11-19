@@ -28,7 +28,7 @@ typedef signed   int   INT32;
 
 // ´«Êä×´Ì¬
 typedef enum _GSM_STATUS_TRANS {
-	GSM_STATUS_TRANS_DATA,
+	GSM_STATUS_TRANS_DATA = 0,
 	GSM_STATUS_TRANS_COMMAND
 } GSM_STATUS_TRANS;
 
