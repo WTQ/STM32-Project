@@ -12,9 +12,13 @@
 
 //void GSM_Init(void);
 
-// GSM协议栈发送和接收数据入口
+// GSM协议栈接收数据入口
 void GSM_CORE_Rx_Handle(UINT8 data);
-void GSM_CORE_AT(char *data);
+
+// GSM协议栈发送数据入口
+bool GSM_CORE_Tx_Handle(char *data);
+bool GSM_Core_Tx_AT(char *data);
+bool GSM_Core_Tx_Data(char *data);
 
 // GSM协议栈处理函数
 void GSM_CORE_Processor(UINT8 data);
