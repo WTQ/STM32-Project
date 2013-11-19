@@ -15,18 +15,23 @@
 // 选择通信的USART
 #define GSM_COMM_SEL	GSM_USART_1
 
-// 初始化TIM2
-void GSM_TimeInit(void);
-// 启动并设置TIM2
-void GSM_SetTime(uint16_t cnt, uint16_t psc);
+// 初始化TIM2、TIM3
+void GSM_CommandTimeInit(void);
+void GSM_DataTimeInit(void);
+// 启动并设置TIM2、TIM3
+void GSM_Set_TIM2(uint16_t cnt, uint16_t psc);
+void GSM_Set_TIM3(uint16_t cnt, uint16_t psc);
 // 启动命令处理等待超时
-void GSM_SetTimeCommand(void);
+void GSM_SetTimeCommand(void);;
 // 启动接收数据超时
 void GSM_SetTimeData(void);
 // 关闭TIM2
-void GSM_ShutTime(void);
+void GSM_ShutTIMCommand(void);
+// 关闭TIM3
+void GSM_ShutTIMData(void);
 // TIM更新事件处理
-void GSM_TimeHandle(void);
+void GSM_CommandTimeHandle(void);
+void GSM_DataTimeHandle(void);
 // USART_GPIO配置
 void GSM_USART_GPIO(void);
 // USART配置

@@ -6,6 +6,7 @@
 #include "usr_task.h"
 
 #include "gsm_driver.h"
+#include "gsm_core.h"
 
 // 任务堆栈空间
 static OS_STK App_TaskStartStk[APP_TASK_START_STK_SIZE];
@@ -64,34 +65,58 @@ static void App_GPRSSend(void* p_arg)
 	WM_Record WMRecord;
 	// HTTP发送的缓冲区
 	char GPRSBuffer[400];
-	
+
 	// GSM模块初始化
 	GSM_Driver_Int();
 	
-	GPRS_Init();
+//	GPRS_Init();
+//	GSM_Core_Tx_AT("AT\r\n");
+//	GSM_Core_Tx_AT("AT+IPR=115200\r\n");
+	GSM_Core_Tx_AT("AT+CIPHEAD=1\r\n");
+	OSTimeDlyHMSM(0,0,1,0);
+	GSM_Core_Tx_AT("AT+CSCS=\"GSM\"\r\n");
+	OSTimeDlyHMSM(0,0,1,0);
+	GSM_Core_Tx_AT("AT+CGATT=1\r\n");
+	OSTimeDlyHMSM(0,0,1,0);
+	GSM_Core_Tx_AT("AT+CSTT\r\n");
+	OSTimeDlyHMSM(0,0,1,0);
+	GSM_Core_Tx_AT("AT+CIICR\r\n");
+	OSTimeDlyHMSM(0,0,1,0);
+	GSM_Core_Tx_AT("AT+CIFSR\r\n");
+	OSTimeDlyHMSM(0,0,1,0);
 	
+	
+	
+	GSM_Core_Tx_AT("AT+CIPSTART=\"TCP\",\"202.204.81.57\",80\r\n");
+	GetRecord(&WMRecord, 1);
+	GPRSBuffer[0] = 0;
+	GSM_Post_Record(GPRSBuffer, &WMRecord);
+	GSM_Core_Tx_AT(GPRSBuffer);
 	while (1) {
-		if(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
-			while(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
-				GPRS_TCP_Connet("202.204.81.57","80");
-				index = GetRecordIndexById(Next_Record.Record_ID);
-				GetRecord(&WMRecord, index);
-				GPRSBuffer[0] = 0;
-				GSM_Post_Record(GPRSBuffer, &WMRecord);
-				GSM_GPRS_SEND((unsigned char *) GPRSBuffer);
-				OSTimeDlyHMSM(0, 0, 5, 0);
-				GRRS_TCP_Close();
-				Next_Record.Record_ID++;
-			}
-		} else {
-			GPRS_TCP_Connet("202.204.81.57","80");
-			GPRSBuffer[0] = 0;
-			GSM_Post_Beat(GPRSBuffer);
-			GSM_GPRS_SEND((unsigned char *) GPRSBuffer);
-			OSTimeDlyHMSM(0, 0, 4,0);
-			GRRS_TCP_Close();
-		}
+	
+	
+//		if(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
+//			while(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
+//				GPRS_TCP_Connet("202.204.81.57","80");
+//				index = GetRecordIndexById(Next_Record.Record_ID);
+//				GetRecord(&WMRecord, index);
+//				GPRSBuffer[0] = 0;
+//				GSM_Post_Record(GPRSBuffer, &WMRecord);
+//				GSM_GPRS_SEND((unsigned char *) GPRSBuffer);
+//				OSTimeDlyHMSM(0, 0, 5, 0);
+//				GRRS_TCP_Close();
+//				Next_Record.Record_ID++;
+//			}
+//		} else {
+//			GPRS_TCP_Connet("202.204.81.57","80");
+//			GPRSBuffer[0] = 0;
+//			GSM_Post_Beat(GPRSBuffer);
+//			GSM_GPRS_SEND((unsigned char *) GPRSBuffer);
+//			OSTimeDlyHMSM(0, 0, 4,0);
+//			GRRS_TCP_Close();
+//		}
 		OSTimeDlyHMSM(0, 0, 1, 0);
+
 	}
 }
 

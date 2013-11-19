@@ -1,6 +1,8 @@
 /**
  * GSM模块的核心通信协议模块
  *
+ * 注意：该协议存在如下机制，若发送命令等待返回值超时，则超时后返回的第一段数据被抛弃！
+ *
  * @author 王特、矫东航
  */
 
@@ -41,12 +43,9 @@ void GSM_CORE_Rx_Handle(UINT8 data)
 			GSM_SetTimeData();
 			GSM_Core_Rx_Command(data);
 			break;
-		case GSM_STATUS_COMMAND_SUCCESS :
-			// 切换至数据态
-			GSM_STATUS = GSM_STATUS_TRANS_DATA;
+		case GSM_STATUS_COMMAND_TIMEOUT :
 			GSM_SetTimeData();
-			GSM_Data_Record.Status = GSM_STATUS_DATA_DATA;
-			GSM_Core_Rx_Data(data);
+			break;
 		}
 	}
 }
@@ -68,52 +67,105 @@ void GSM_Core_Rx_Echo(UINT8 data)
 {
 	GSM_Command_Record.Echo_Data[GSM_Command_Record.Echo_Count++] = data;
 	
-	if ((GSM_Command_Record.Echo_Count == GSM_Command_Record.Tx_Data_Count)
-		&& (strncmp( GSM_Command_Record.Echo_Data, GSM_Command_Record.Tx_Data, GSM_Command_Record.Tx_Data_Count) == 0)) {
+	if ((GSM_Command_Record.Echo_Count == GSM_Command_Record.Tx_Data_Count)) {
 		
-		// 清空回显内容
-		GSM_Command_Record.Echo_Count = 0;
-		// 进入执行状态
-		GSM_Command_Record.Status = GSM_STATUS_COMMAND_EXECUTE;
-		GSM_SetTimeCommand();
+		if (strncmp( (char *)GSM_Command_Record.Echo_Data, 
+			(char *)GSM_Command_Record.Tx_Data, 
+			GSM_Command_Record.Tx_Data_Count) == 0) {
+			
+			// 进入执行状态
+			GSM_Command_Record.Status = GSM_STATUS_COMMAND_EXECUTE;
+		} else {
+			// 进入数据态
+			GSM_Command_Record.Status = GSM_STATUS_COMMAND_ERROR;
+			GSM_STATUS = GSM_STATUS_TRANS_DATA;
+		}
 	}
 }
 
-void GSM_CORE_AT(char *data)
+bool GSM_CORE_Tx_Handle(char *data)
 {
+	if (GSM_STATUS == GSM_STATUS_TRANS_COMMAND) {
+		if ((GSM_STATUS_COMMAND_SUCCESS != GSM_Command_Record.Status)
+			&& (GSM_STATUS_COMMAND_ERROR != GSM_Command_Record.Status)
+			&& (GSM_STATUS_COMMAND_IDLE != GSM_Command_Record.Status)) {
+			// 非IDLE或SUCCESS或ERROR状态不能发送命令
+			return FALSE;
+		}
+	} else if (GSM_STATUS == GSM_STATUS_TRANS_DATA) {
+		if (GSM_STATUS_DATA_DATA == GSM_Data_Record.Status) {
+			// DATA状态不能发送命令
+			return FALSE;
+		}
+	}
 	// 记录命令及其长度
-	strcpy(GSM_Command_Record.Tx_Data, data);
+	strcpy((char *)GSM_Command_Record.Tx_Data, data);
 	GSM_Command_Record.Tx_Data_Count = strlen(data);
 	GSM_Command_Record.Rx_Data_Count = 0;
 	GSM_Command_Record.Echo_Count = 0;
+	
 	// 切换状态
 	GSM_STATUS = GSM_STATUS_TRANS_COMMAND;
 	GSM_Command_Record.Status = GSM_STATUS_COMMAND_ECHO;
+	
+	// 开启命令超时
+	GSM_SetTimeCommand();
+	
+	// USART发送命令
+	GSM_USART_TxStr(data);
+	
+	while (1) {
+		if ((GSM_STATUS_COMMAND_SUCCESS == GSM_Command_Record.Status)
+				|| (GSM_STATUS_COMMAND_TIMEOUT == GSM_Command_Record.Status) 
+				|| (GSM_STATUS_COMMAND_ERROR == GSM_Command_Record.Status)) {
+			break;
+		}
+	}
+	return TRUE;
 }
 
-void Timeout_Handle(void)
+bool GSM_Core_Tx_AT(char *data)
+{
+	return GSM_CORE_Tx_Handle(data);
+}
+bool GSM_Core_Tx_Data(char *data)
+{
+	return GSM_CORE_Tx_Handle(data);
+}
+
+void Timeout_Command(void)
 {
 	if (GSM_STATUS == GSM_STATUS_TRANS_COMMAND) {
-		if (GSM_Command_Record.Status == GSM_STATUS_COMMAND_EXECUTE) {
-			// 标记超时（暂时未用到）
-			GSM_Command_Record.Status = GSM_STATUS_COMMAND_TIMEOUT;
-					
-		} else if (GSM_Command_Record.Status == GSM_STATUS_COMMAND_DATA) {
-			
+		GSM_Command_Record.Status = GSM_STATUS_COMMAND_TIMEOUT;
+		
+		// 发送“\r\n”使清除上一条命名的错误
+		GSM_USART_TxStr("\r\n");
+		
+		// 切换至数据态，可能更改到上层执行
+		// GSM_STATUS = GSM_STATUS_TRANS_DATA;
+	}
+	
+	// 关闭TIM2定时器
+	GSM_ShutTIMCommand();
+}
+
+void Timeout_Data(void)
+{
+	if (GSM_STATUS == GSM_STATUS_TRANS_COMMAND) {
+		if (GSM_Command_Record.Status == GSM_STATUS_COMMAND_DATA) {	
 			GSM_Command_Record.Status = GSM_STATUS_COMMAND_SUCCESS;
 			// @todo 上层接收命令态数据函数
 			
 		}
-		// 切换至数据态，可能更改到上层执行
-		GSM_STATUS == GSM_STATUS_TRANS_DATA;
-		GSM_Data_Record.Status = GSM_STATUS_DATA_IDLE;
 		
+		// 切换至数据态，可能更改到上层执行
+		GSM_STATUS = GSM_STATUS_TRANS_DATA;
 	} else if (GSM_STATUS == GSM_STATUS_TRANS_DATA) {
-	
 		GSM_Data_Record.Status = GSM_STATUS_DATA_SUCCESS;
 		// @todo 上层接收数据态数据函数
 		
-		// 切换至IDLE状态，可能更改到上层执行
-		GSM_Data_Record.Status = GSM_STATUS_DATA_IDLE;
 	}
+	
+	// 关闭TIM3定时器
+	GSM_ShutTIMData();
 }

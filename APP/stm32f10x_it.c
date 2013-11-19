@@ -150,7 +150,15 @@ void SysTick_Handler(void)
 void TIM2_IRQHandler(void)
 {
 	OSIntEnter();
-	GSM_TimeHandle();
+	GSM_CommandTimeHandle();
+	OSIntExit();
+}
+
+// TIM3中断服务程序，作为SIM900超时用
+void TIM3_IRQHandler(void)
+{
+	OSIntEnter();
+	GSM_DataTimeHandle();
 	OSIntExit();
 }
 
