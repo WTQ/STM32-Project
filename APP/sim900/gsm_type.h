@@ -68,4 +68,10 @@ typedef struct _GSM_DATA_RECORD {
 	GSM_STATUS_DATA Status;
 } GSM_DATA_RECORD;
 
+// base层储存的收到记录
+typedef struct _GSM_RECEIVE_RECORD {
+	UINT8 Data[500];
+	UINT16 Data_Count;
+} GSM_RECEIVE_RECORD;
+
 #endif

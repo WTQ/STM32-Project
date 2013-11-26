@@ -10,6 +10,9 @@
 
 #include <string.h>
 
+#include "gsm_base.h"
+
+
 GSM_STATUS_TRANS GSM_STATUS;
 GSM_COMMAND_RECORD GSM_Command_Record;
 GSM_DATA_RECORD GSM_Data_Record;
@@ -154,16 +157,15 @@ void Timeout_Data(void)
 	if (GSM_STATUS == GSM_STATUS_TRANS_COMMAND) {
 		if (GSM_Command_Record.Status == GSM_STATUS_COMMAND_DATA) {	
 			GSM_Command_Record.Status = GSM_STATUS_COMMAND_SUCCESS;
-			// @todo 上层接收命令态数据函数
-			
+			// 上层接收命令态数据函（暂时不需要）
 		}
 		
 		// 切换至数据态，可能更改到上层执行
 		GSM_STATUS = GSM_STATUS_TRANS_DATA;
 	} else if (GSM_STATUS == GSM_STATUS_TRANS_DATA) {
 		GSM_Data_Record.Status = GSM_STATUS_DATA_SUCCESS;
-		// @todo 上层接收数据态数据函数
-		
+		// base层接收数据态数据函数
+		GSM_Receive_KeyWord();
 	}
 	
 	// 关闭TIM3定时器
