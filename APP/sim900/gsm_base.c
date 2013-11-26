@@ -11,6 +11,7 @@
 extern GSM_STATUS_TRANS GSM_STATUS;
 extern GSM_COMMAND_RECORD GSM_Command_Record;
 extern GSM_DATA_RECORD GSM_Data_Record;
+GSM_RECEIVE_RECORD Receive;
 
 bool GSM_AT_Only(char *data)
 {	
@@ -20,25 +21,26 @@ bool GSM_AT_Only(char *data)
 	return GSM_Core_Tx_AT(data);
 }
 
-bool GSM_AT_Receive(char *data, GSM_RECEIVE_RECORD *Receive)
+bool GSM_AT_Receive(char *data, GSM_RECEIVE_RECORD *pReceive)
 {
 	if (!GSM_AT_Only(data)) {
 		return FALSE;
 	}
 	// 数据搬移
-	memcpy(Receive->Data, GSM_Command_Record.Rx_Data, GSM_Command_Record.Rx_Data_Count);
-	// @todo 注意\r\n 和 count-4 和\0 问题
-	Receive->Data_Count = GSM_Command_Record.Rx_Data_Count;
+	memcpy(pReceive->Data, GSM_Command_Record.Rx_Data, GSM_Command_Record.Rx_Data_Count);
+	
+	// 去掉了首尾的\r\n，共4个
+	pReceive->Data_Count = Remove_CR(pReceive->Data, GSM_Command_Record.Rx_Data_Count);
+	
 	return TRUE;
 }
 
 bool GSM_AT_Recall(char *data, char *waitstr)
-{
-	GSM_RECEIVE_RECORD Receive;
-	
+{	
 	if (!GSM_AT_Receive(data, &Receive)) {
 		return FALSE;
 	}
+	// 上面函数已经去掉了首尾的\r\n，这里不用重复删除了
 	if (!strncmp((char*)Receive.Data, waitstr, Receive.Data_Count)) {
 		return FALSE;
 	} else {
@@ -46,29 +48,41 @@ bool GSM_AT_Recall(char *data, char *waitstr)
 	}
 }
 
-void GSM_Receive_KeyWord()
+void GSM_Receive_KeyWord(void)
 {
-	// @todo 注意\r\n 和 count-4 和\0 问题
-	if (strncmp((char*)GSM_Data_Record.Rx_Data, "", GSM_Data_Record.Rx_Data_Count)) {
+	// 数据搬移
+	memcpy(Receive.Data, GSM_Data_Record.Rx_Data, GSM_Data_Record.Rx_Data_Count);
+	// 去掉了首尾的\r\n，共4个
+	Receive.Data_Count = Remove_CR(Receive.Data, Receive.Data_Count);
+	
+	if (strncmp((char*)Receive.Data, "", Receive.Data_Count)) {
+	
+	} else if (strncmp((char*)Receive.Data, "", Receive.Data_Count)) {
+	
+	} else if (strncmp((char*)Receive.Data, "", Receive.Data_Count)) {
 	
 	}
 }
 
-void GSM_Receive_Data(GSM_RECEIVE_RECORD *Receive)
+void GSM_Receive_Data(GSM_RECEIVE_RECORD *pReceive)
 {
 	while (1) {
 		if (GSM_Data_Record.Status == GSM_STATUS_DATA_SUCCESS) {
-		// @todo 注意\r\n 和 count-4 和\0 问题
-			memcpy(Receive->Data, GSM_Data_Record.Rx_Data, GSM_Data_Record.Rx_Data_Count);
-			Receive->Data_Count = GSM_Data_Record.Rx_Data_Count;
+			// 数据搬移
+			memcpy(pReceive->Data, GSM_Data_Record.Rx_Data, GSM_Data_Record.Rx_Data_Count);
+			// 去掉了首尾的\r\n，共4个
+			pReceive->Data_Count = Remove_CR(pReceive->Data, pReceive->Data_Count);
+			
 			break;
 		}
 	}
 }
 
-void Remove_CR(UINT8* Data, int count)
+int Remove_CR(UINT8* Data, int count)
 {
-	for () {
-		
+	int i;
+	for (i = 0; i < count-4; i++) {
+		*(Data + i) = *(Data + i + 2);
 	}
+	return (count-4);
 }
