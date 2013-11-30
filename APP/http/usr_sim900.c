@@ -7,7 +7,7 @@
 #include "usr_sim900.h"
  
  
-void GPRS_Init(void)
+void GPRS_Init1(void)
 {
 	// ¸½×ÅÍøÂç
 	GSM_TxString("AT+CGATT=1\r\n");
@@ -48,7 +48,7 @@ void GPRS_TCP_Connet(char *ip, char *port)
 	OSTimeDlyHMSM(0, 0, 4, 0);
 }
 
-void GPRS_TCP_Send(void)
+void GPRS_TCP_Send1(void)
 {
 }
 

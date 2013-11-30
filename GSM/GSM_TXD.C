@@ -130,15 +130,15 @@ void GSM_Configuration(void)
   // 清除TC标志，防止第一个发送时的溢出现象
   USART_ClearFlag(USART1,USART_FLAG_TC);
   
-  GSM_TxString("AT\r\n");
+  GSM_TxString("AT\r\n");//////////////////////
   OSTimeDlyHMSM(0, 0, 1,0);
   GSM_TxString("AT+IPR=115200\r\n");
   OSTimeDlyHMSM(0, 0, 1,0);
   GSM_TxString("AT+CMGF=1\r\n");
   OSTimeDlyHMSM(0, 0, 1,0);
-  GSM_TxString("AT+CIPHEAD=1\r\n");
+  GSM_TxString("AT+CIPHEAD=1\r\n");///////////////gprs
   OSTimeDlyHMSM(0, 0, 1,0);
-  GSM_TxString("AT+CSCS=\"GSM\"\r\n");
+  GSM_TxString("AT+CSCS=\"GSM\"\r\n");  //////////////////
   OSTimeDlyHMSM(0, 0, 1,0);
   GSM_TxString("AT+CPMS=\"SM\"\r\n"); //短信存到SIM卡
   OSTimeDlyHMSM(0, 0, 1,0);
