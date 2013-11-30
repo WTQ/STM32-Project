@@ -20,7 +20,7 @@ bool GSM_AT_Recall(char *data, char *waitstr);
 // 接收关键字
 void GSM_Receive_KeyWord(void);
 // 接收普通数据
-void GSM_Receive_Data(GSM_RECEIVE_RECORD *Receive);
+void GSM_Receive_Data(GSM_RECEIVE_RECORD *pReceive);
 // 接收期待字符串
 bool GSM_Receive_Recall(char *waitstr);
 

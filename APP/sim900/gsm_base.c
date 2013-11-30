@@ -8,6 +8,8 @@
 
 #include <string.h>
 
+#include "gsm_gprs.h"
+
 extern GSM_STATUS_TRANS GSM_STATUS;
 extern GSM_COMMAND_RECORD GSM_Command_Record;
 extern GSM_DATA_RECORD GSM_Data_Record;
@@ -15,7 +17,9 @@ GSM_RECEIVE_RECORD Receive;
 
 bool GSM_AT_Only(char *data)
 {	
-	if (GSM_Command_Record.Status != GSM_STATUS_COMMAND_SUCCESS) {
+	if ((GSM_Command_Record.Status == GSM_STATUS_COMMAND_ECHO)
+			|| (GSM_Command_Record.Status == GSM_STATUS_COMMAND_EXECUTE)
+			|| (GSM_Command_Record.Status == GSM_STATUS_COMMAND_DATA)) {
 		return FALSE;
 	}
 	return GSM_Core_Tx_AT(data);
@@ -53,10 +57,13 @@ void GSM_Receive_KeyWord(void)
 	// 数据搬移
 	memcpy(Receive.Data, GSM_Data_Record.Rx_Data, GSM_Data_Record.Rx_Data_Count);
 	// 去掉了首尾的\r\n，没有则不去掉
-	Receive.Data_Count = Remove_CR(Receive.Data, Receive.Data_Count);
+	Receive.Data_Count = Remove_CR(Receive.Data, GSM_Data_Record.Rx_Data_Count);
 	
-	if (strncmp((char*)Receive.Data, "", strlen("")) == 0) {
-	
+	if (strncmp((char*)Receive.Data, "Call Ready", strlen("Call Ready")) == 0) {
+		// 初始化GSM和GPSR
+		GSM_Config();
+		GPRS_Init();
+		
 	} else if (strncmp((char*)Receive.Data, "", strlen("")) == 0) {
 	
 	} else if (strncmp((char*)Receive.Data, "", strlen("")) == 0) {
@@ -70,8 +77,9 @@ void GSM_Receive_Data(GSM_RECEIVE_RECORD *pReceive)
 		if (GSM_Data_Record.Status == GSM_STATUS_DATA_SUCCESS) {
 			// 数据搬移
 			memcpy(pReceive->Data, GSM_Data_Record.Rx_Data, GSM_Data_Record.Rx_Data_Count);
-			// 去掉了首尾的\r\n，没有则不去掉
-			pReceive->Data_Count = Remove_CR(pReceive->Data, pReceive->Data_Count);
+			// 数据全部接收，这里\r\n不去掉
+			// pReceive->Data_Count = Remove_CR(pReceive->Data, GSM_Data_Record.Rx_Data_Count);
+			pReceive->Data_Count = GSM_Data_Record.Rx_Data_Count;
 			
 			break;
 		}
