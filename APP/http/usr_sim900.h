@@ -18,10 +18,10 @@
 
 // 
 
-void GPRS_Init(void);
+void GPRS_Init1(void);
 void GPRS_DNS_Init(void);
 void GPRS_TCP_Connet(char *ip, char *port);
-void GPRS_TCP_Send(void);
+void GPRS_TCP_Send1(void);
 void GRRS_TCP_Close(void);
 void GRPS_TCP_Recv(void);
 

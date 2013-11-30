@@ -68,7 +68,7 @@ static void App_GPRSSend(void* p_arg)
 	// GSMÄ£¿é³õÊ¼»¯
 	GSM_Driver_Int();
 	
-//	GPRS_Init();
+//	GPRS_Init1();
 //	GSM_Core_Tx_AT("AT\r\n");
 //	GSM_Core_Tx_AT("AT+IPR=115200\r\n");
 	GSM_Core_Tx_AT("AT+CIPHEAD=1\r\n");
