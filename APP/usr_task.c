@@ -7,6 +7,7 @@
 
 #include "gsm_driver.h"
 #include "gsm_core.h"
+#include "gsm_gprs.h"
 
 // ÈÎÎñ¶ÑÕ»¿Õ¼ä
 static OS_STK App_TaskStartStk[APP_TASK_START_STK_SIZE];
@@ -69,8 +70,8 @@ static void App_GPRSSend(void* p_arg)
 	GSM_Driver_Int();
 	
 //	GPRS_Init1();
-//	GSM_Core_Tx_AT("AT\r\n");
-//	GSM_Core_Tx_AT("AT+IPR=115200\r\n");
+	GSM_Core_Tx_AT("AT\r\n");
+	GSM_Core_Tx_AT("AT+IPR=115200\r\n");
 	GSM_Core_Tx_AT("AT+CIPHEAD=1\r\n");
 	OSTimeDlyHMSM(0,0,1,0);
 	GSM_Core_Tx_AT("AT+CSCS=\"GSM\"\r\n");
@@ -86,11 +87,15 @@ static void App_GPRSSend(void* p_arg)
 	
 	
 	
-	GSM_Core_Tx_AT("AT+CIPSTART=\"TCP\",\"202.204.81.57\",80\r\n");
-	GetRecord(&WMRecord, 1);
-	GPRSBuffer[0] = 0;
-	GSM_Post_Record(GPRSBuffer, &WMRecord);
-	GSM_Core_Tx_AT(GPRSBuffer);
+//	GSM_Core_Tx_AT("AT+CIPSTART=\"TCP\",\"202.204.81.57\",80\r\n");
+//	GetRecord(&WMRecord, 1);
+//	GPRSBuffer[0] = 0;
+//	GSM_Post_Record(GPRSBuffer, &WMRecord);
+//	GSM_Core_Tx_AT(GPRSBuffer);
+
+
+
+
 	while (1) {
 	
 	
