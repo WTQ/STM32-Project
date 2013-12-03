@@ -70,22 +70,27 @@ static void App_GPRSSend(void* p_arg)
 	GSM_Driver_Int();
 	
 //	GPRS_Init1();
-	GSM_Core_Tx_AT("AT\r\n");
-	GSM_Core_Tx_AT("AT+IPR=115200\r\n");
-	GSM_Core_Tx_AT("AT+CIPHEAD=1\r\n");
-	OSTimeDlyHMSM(0,0,1,0);
-	GSM_Core_Tx_AT("AT+CSCS=\"GSM\"\r\n");
-	OSTimeDlyHMSM(0,0,1,0);
-	GSM_Core_Tx_AT("AT+CGATT=1\r\n");
-	OSTimeDlyHMSM(0,0,1,0);
-	GSM_Core_Tx_AT("AT+CSTT\r\n");
-	OSTimeDlyHMSM(0,0,1,0);
-	GSM_Core_Tx_AT("AT+CIICR\r\n");
-	OSTimeDlyHMSM(0,0,1,0);
-	GSM_Core_Tx_AT("AT+CIFSR\r\n");
-	OSTimeDlyHMSM(0,0,1,0);
+
+//	GSM_Core_Tx_AT("AT\r\n");
+//	GSM_Core_Tx_AT("AT+IPR=115200\r\n");
+//	GSM_Core_Tx_AT("AT+CIPHEAD=1\r\n");
+//	OSTimeDlyHMSM(0,0,1,0);
+//	GSM_Core_Tx_AT("AT+CSCS=\"GSM\"\r\n");
+//	OSTimeDlyHMSM(0,0,1,0);
+//	GSM_Core_Tx_AT("AT+CGATT=1\r\n");
+//	OSTimeDlyHMSM(0,0,1,0);
+//	GSM_Core_Tx_AT("AT+CSTT\r\n");
+//	OSTimeDlyHMSM(0,0,1,0);
+//	GSM_Core_Tx_AT("AT+CIICR\r\n");
+//	OSTimeDlyHMSM(0,0,1,0);
+//	GSM_Core_Tx_AT("AT+CIFSR\r\n");
+//	OSTimeDlyHMSM(0,0,1,0);
 	
-	
+	while (!GSM_Receive_Recall("Call Ready")) {
+	}
+	// ≥ı ºªØGSM∫ÕGPSR
+	GSM_Config();
+	GPRS_Init();
 	
 //	GSM_Core_Tx_AT("AT+CIPSTART=\"TCP\",\"202.204.81.57\",80\r\n");
 //	GetRecord(&WMRecord, 1);
@@ -119,6 +124,29 @@ static void App_GPRSSend(void* p_arg)
 //			OSTimeDlyHMSM(0, 0, 4,0);
 //			GRRS_TCP_Close();
 //		}
+
+
+		if(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
+			while(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
+				GPRS_TCP_Connect("202.204.81.57","80");
+				index = GetRecordIndexById(Next_Record.Record_ID);
+				GetRecord(&WMRecord, index);
+				GPRSBuffer[0] = 0;
+				GSM_Post_Record(GPRSBuffer, &WMRecord);
+				GPRS_TCP_Send(GPRSBuffer);
+				GRRS_TCP_Closed();
+				Next_Record.Record_ID++;
+			}
+		} else {
+			GPRS_TCP_Connect("202.204.81.57","80");
+			GPRSBuffer[0] = 0;
+			GSM_Post_Beat(GPRSBuffer);
+			GPRS_TCP_Send(GPRSBuffer);
+			GRRS_TCP_Closed();
+		}
+
+
+
 		OSTimeDlyHMSM(0, 0, 1, 0);
 
 	}

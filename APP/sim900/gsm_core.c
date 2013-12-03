@@ -162,12 +162,16 @@ void Timeout_Data(void)
 		
 		// 切换至数据态，可能更改到上层执行
 		GSM_STATUS = GSM_STATUS_TRANS_DATA;
+		
 	} else if (GSM_STATUS == GSM_STATUS_TRANS_DATA) {
 		GSM_Data_Record.Status = GSM_STATUS_DATA_SUCCESS;
 		// base层接收数据态数据函数
+		
+		// 关闭TIM3定时器
+		GSM_ShutTIMData();
+		
 		GSM_Receive_KeyWord();
 	}
-	
 	// 关闭TIM3定时器
 	GSM_ShutTIMData();
 }
