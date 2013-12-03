@@ -88,6 +88,7 @@ void GSM_Core_Rx_Echo(UINT8 data)
 
 bool GSM_CORE_Tx_Handle(char *data)
 {
+	OSTimeDlyHMSM(0, 0, 0, 500);
 	if (GSM_STATUS == GSM_STATUS_TRANS_COMMAND) {
 		if ((GSM_STATUS_COMMAND_SUCCESS != GSM_Command_Record.Status)
 			&& (GSM_STATUS_COMMAND_ERROR != GSM_Command_Record.Status)
@@ -168,9 +169,9 @@ void Timeout_Data(void)
 		// base层接收数据态数据函数
 		
 		// 关闭TIM3定时器
-		GSM_ShutTIMData();
+	//	GSM_ShutTIMData();
 		
-		GSM_Receive_KeyWord();
+	//	GSM_Receive_KeyWord();
 	}
 	// 关闭TIM3定时器
 	GSM_ShutTIMData();

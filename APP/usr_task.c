@@ -62,6 +62,7 @@ static void App_TaskCreate(void)
 static void App_GPRSSend(void* p_arg)
 {
 	uint8_t index = 0;
+	int len;
 	WM_Record WMRecord;
 	// HTTP发送的缓冲区
 	char GPRSBuffer[400];
@@ -86,8 +87,11 @@ static void App_GPRSSend(void* p_arg)
 //	GSM_Core_Tx_AT("AT+CIFSR\r\n");
 //	OSTimeDlyHMSM(0,0,1,0);
 	
-	while (!GSM_Receive_Recall("Call Ready")) {
-	}
+
+	OSTimeDlyHMSM(0,0,10,0);
+	
+//	while (!GSM_Receive_Recall("Call Ready")) {
+//	}
 	// 初始化GSM和GPSR
 	GSM_Config();
 	GPRS_Init();
@@ -133,6 +137,9 @@ static void App_GPRSSend(void* p_arg)
 				GetRecord(&WMRecord, index);
 				GPRSBuffer[0] = 0;
 				GSM_Post_Record(GPRSBuffer, &WMRecord);
+				len = strlen(GPRSBuffer);
+				GPRSBuffer[len] = 0x1A;
+				GPRSBuffer[len + 1] = '\0';
 				GPRS_TCP_Send(GPRSBuffer);
 				GRRS_TCP_Closed();
 				Next_Record.Record_ID++;
@@ -141,6 +148,9 @@ static void App_GPRSSend(void* p_arg)
 			GPRS_TCP_Connect("202.204.81.57","80");
 			GPRSBuffer[0] = 0;
 			GSM_Post_Beat(GPRSBuffer);
+			len = strlen(GPRSBuffer);
+			GPRSBuffer[len] = 0x1A;
+			GPRSBuffer[len + 1] = '\0';
 			GPRS_TCP_Send(GPRSBuffer);
 			GRRS_TCP_Closed();
 		}

@@ -8,6 +8,8 @@
 
 #include <string.h>
 
+#include "main.h"
+
 extern GSM_RECEIVE_RECORD Receive;
 
 void GSM_Config(void)
@@ -62,6 +64,7 @@ bool GPRS_TCP_Send(char *Data)
 	if (!GSM_AT_Recall("AT+CIPSEND\r\n", ">")) {
 		return FALSE;
 	}
+	
 	return GSM_AT_Recall(Data, "SEND OK");
 }
 
@@ -106,5 +109,5 @@ bool GPRS_TCP_Receive(GSM_RECEIVE_RECORD *pReceive)
 void GRRS_TCP_Closed(void)
 {
 	// ¹Ø±ÕTCPÁ¬½Ó
-	GSM_AT_Recall("AT+CIPCLOSE=1\r\n", "OK");
+	GSM_AT_Recall("AT+CIPCLOSE=1\r\n", "CLOSE OK");
 }
