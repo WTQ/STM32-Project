@@ -61,8 +61,8 @@ void GSM_Receive_KeyWord(void)
 	
 	if (strncmp((char*)Receive.Data, "Call Ready", strlen("Call Ready")) == 0) {
 		// 初始化GSM和GPSR
-		GSM_Config();
-		GPRS_Init();
+	//	GSM_Config();
+	//	GPRS_Init();
 		
 	} else if (strncmp((char*)Receive.Data, "", strlen("")) == 0) {
 	
@@ -88,13 +88,13 @@ void GSM_Receive_Data(GSM_RECEIVE_RECORD *pReceive)
 
 bool GSM_Receive_Recall(char *waitstr)
 {
-	while (1) {
 		GSM_Receive_Data(&Receive);
-		if (strncmp((char*)Receive.Data, waitstr, strlen(waitstr)) == 0) {
-			break;
+		// 去掉了首尾的\r\n，没有则不去掉
+		Receive.Data_Count = Remove_CR(Receive.Data, GSM_Data_Record.Rx_Data_Count);
+		if (strncmp((char*)Receive.Data, waitstr, strlen(waitstr)) != 0) {
+			return FALSE;
 		}
-	}
-	return TRUE;
+		return TRUE;
 }
 
 int Remove_CR(UINT8* Data, int count)
