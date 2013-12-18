@@ -62,11 +62,13 @@ static void App_TaskCreate(void)
 static void App_GPRSSend(void* p_arg)
 {
 	uint8_t index = 0;
-	int len;
+//	int len;
 	WM_Record WMRecord;
 	// HTTP发送的缓冲区
 	char GPRSBuffer[400];
-
+	
+	GSM_RECEIVE_RECORD Receive;
+	
 	// GSM模块初始化
 	GSM_Driver_Int();
 	
@@ -88,10 +90,10 @@ static void App_GPRSSend(void* p_arg)
 //	OSTimeDlyHMSM(0,0,1,0);
 	
 
-	OSTimeDlyHMSM(0,0,10,0);
+//	OSTimeDlyHMSM(0,0,10,0);
 	
-//	while (!GSM_Receive_Recall("Call Ready")) {
-//	}
+	while (!GSM_Receive_Recall("Call Ready")) {
+	}
 	// 初始化GSM和GPSR
 	GSM_Config();
 	GPRS_Init();
@@ -128,8 +130,15 @@ static void App_GPRSSend(void* p_arg)
 //			OSTimeDlyHMSM(0, 0, 4,0);
 //			GRRS_TCP_Close();
 //		}
-
-
+		GPRS_TCP_Connect("202.204.81.57","80");
+		GPRSBuffer[0] = 0;
+		GSM_Get_Record(GPRSBuffer);
+		GPRS_TCP_Send(GPRSBuffer);
+		GSM_Receive_Record(&Receive);
+		Next_Record.Record_ID = Calculate(&Receive);
+		GRRS_TCP_Closed();
+		
+		
 		if(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
 			while(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
 				GPRS_TCP_Connect("202.204.81.57","80");
@@ -137,9 +146,9 @@ static void App_GPRSSend(void* p_arg)
 				GetRecord(&WMRecord, index);
 				GPRSBuffer[0] = 0;
 				GSM_Post_Record(GPRSBuffer, &WMRecord);
-				len = strlen(GPRSBuffer);
-				GPRSBuffer[len] = 0x1A;
-				GPRSBuffer[len + 1] = '\0';
+//				len = strlen(GPRSBuffer);
+//				GPRSBuffer[len] = 0x1A;
+//				GPRSBuffer[len + 1] = '\0';
 				GPRS_TCP_Send(GPRSBuffer);
 				GRRS_TCP_Closed();
 				Next_Record.Record_ID++;
@@ -148,9 +157,9 @@ static void App_GPRSSend(void* p_arg)
 			GPRS_TCP_Connect("202.204.81.57","80");
 			GPRSBuffer[0] = 0;
 			GSM_Post_Beat(GPRSBuffer);
-			len = strlen(GPRSBuffer);
-			GPRSBuffer[len] = 0x1A;
-			GPRSBuffer[len + 1] = '\0';
+//			len = strlen(GPRSBuffer);
+//			GPRSBuffer[len] = 0x1A;
+//			GPRSBuffer[len + 1] = '\0';
 			GPRS_TCP_Send(GPRSBuffer);
 			GRRS_TCP_Closed();
 		}
