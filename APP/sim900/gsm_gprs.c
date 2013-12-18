@@ -8,8 +8,6 @@
 
 #include <string.h>
 
-#include "main.h"
-
 extern GSM_RECEIVE_RECORD Receive;
 
 void GSM_Config(void)

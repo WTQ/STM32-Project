@@ -9,6 +9,7 @@
 #include "gsm_core.h"
 
 #include <string.h>
+#include "main.h"
 
 #include "gsm_base.h"
 
