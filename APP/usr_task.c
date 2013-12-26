@@ -1,24 +1,27 @@
 /**
  * uC-OS任务模块
  *
- * @author 王特
+ * @author 王特、矫东航
  */
 #include "usr_task.h"
 
+#include "gsm_type.h"
 #include "gsm_driver.h"
 #include "gsm_core.h"
 #include "gsm_gprs.h"
+#include "gsm_base.h"
 
 // 任务堆栈空间
 static OS_STK App_TaskStartStk[APP_TASK_START_STK_SIZE];
 static OS_STK App_LWIPStk[LWIP_TASK_STK_SIZE];
 static OS_STK App_GPRSStk[GPRS_TASK_STK_SIZE];
-
+static OS_STK App_MONITORStk[MONITOR_TASK_STK_SIZE];
 // static OS_STK App_GSMStk[GSM_TASK_STK_SIZE];
 
 // 下一个发送的记录
 static Next_Send Next_Record = {0};
 
+TASK_EXECUTE Task_Execute = IDLE;
 
 OS_EVENT* Com1_Mbox;
 
@@ -54,10 +57,35 @@ static void App_TaskCreate(void)
 	// 创建GPRS发送数据的任务
 	OSTaskCreateExt(App_GPRSSend, NULL, (App_GPRSStk + GPRS_TASK_STK_SIZE - 1), GPRS_TASK_PRIO, GPRS_TASK_PRIO, 
 		App_GPRSStk, GPRS_TASK_STK_SIZE, NULL, OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
+		
+	// 创建GPRSSend监视的任务
+	OSTaskCreateExt(App_Monitor, NULL, (App_MONITORStk + MONITOR_TASK_STK_SIZE - 1), MONITOR_TASK_PRIO, MONITOR_TASK_PRIO, 
+		App_MONITORStk, MONITOR_TASK_STK_SIZE, NULL, OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
 	
 	// 建立GSM发送的任务
 	// OSTaskCreateExt(GSM_Task, NULL, (App_GSMStk + GSM_TASK_STK_SIZE - 1), GSM_TASK_PRIO, GSM_TASK_PRIO, 
 	//	App_GSMStk, GSM_TASK_STK_SIZE, NULL,  OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
+}
+
+static void App_Monitor(void *p_arg)
+{
+	while (1) {
+		OSTaskSuspend(OS_PRIO_SELF);
+//		if (Task_Execute == EXECUTE) {
+		
+			// 删除App_GPRSSend任务
+			OSTaskDel(GPRS_TASK_PRIO);
+			while (OSTaskDelReq(GPRS_TASK_PRIO) != OS_TASK_NOT_EXIST) {
+				OSTimeDlyHMSM(0,0,0,1);
+			}
+		
+			// 创建GPRS发送数据的任务
+			OSTaskCreateExt(App_GPRSSend, NULL, (App_GPRSStk + GPRS_TASK_STK_SIZE - 1), GPRS_TASK_PRIO, GPRS_TASK_PRIO, 
+				App_GPRSStk, GPRS_TASK_STK_SIZE, NULL, OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
+			
+//			Task_Execute = IDLE;
+//		}
+	}
 }
 
 static void App_GPRSSend(void* p_arg)
@@ -92,8 +120,9 @@ static void App_GPRSSend(void* p_arg)
 	
 
 //	OSTimeDlyHMSM(0,0,10,0);
-	
-	while (!GSM_Receive_Recall("Call Ready")) {
+	if (Task_Execute == IDLE) {
+		while (!GSM_Receive_Recall("Call Ready")) {
+		}
 	}
 	// 初始化GSM和GPSR
 	GSM_Config();
@@ -105,6 +134,13 @@ static void App_GPRSSend(void* p_arg)
 //	GSM_Post_Record(GPRSBuffer, &WMRecord);
 //	GSM_Core_Tx_AT(GPRSBuffer);
 
+	GPRS_TCP_Connect("202.204.81.57","80");
+	GPRSBuffer[0] = 0;
+	GSM_Get_Record(GPRSBuffer);
+	GPRS_TCP_Send(GPRSBuffer);
+	GSM_Receive_Record(&Receive);
+	Next_Record.Record_ID = Calculate(&Receive);
+	GRRS_TCP_Closed();
 
 
 
@@ -131,13 +167,6 @@ static void App_GPRSSend(void* p_arg)
 //			OSTimeDlyHMSM(0, 0, 4,0);
 //			GRRS_TCP_Close();
 //		}
-		GPRS_TCP_Connect("202.204.81.57","80");
-		GPRSBuffer[0] = 0;
-		GSM_Get_Record(GPRSBuffer);
-		GPRS_TCP_Send(GPRSBuffer);
-		GSM_Receive_Record(&Receive);
-		Next_Record.Record_ID = Calculate(&Receive);
-		GRRS_TCP_Closed();
 		
 		
 		if(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
