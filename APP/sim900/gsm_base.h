@@ -10,6 +10,8 @@
 #include "gsm_type.h"
 #include "gsm_core.h"
 
+#include "usr_task.h"
+
 // 只发送AT命令
 bool GSM_AT_Only(char *data);
 // 发送AT命令，并保存接收数据
@@ -26,5 +28,7 @@ bool GSM_Receive_Recall(char *waitstr);
 
 // 去除\r\n操作，返回当前Data长度
 int Remove_CR(UINT8* Data, int count);
+
+extern TASK_EXECUTE Task_Execute;
 
 #endif

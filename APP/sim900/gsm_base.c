@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "gsm_gprs.h"
+#include "usr_task.h"
 
 extern GSM_STATUS_TRANS GSM_STATUS;
 extern GSM_COMMAND_RECORD GSM_Command_Record;
@@ -22,7 +23,10 @@ bool GSM_AT_Only(char *data)
 			|| (GSM_Command_Record.Status == GSM_STATUS_COMMAND_DATA)) {
 		return FALSE;
 	}
-	return GSM_Core_Tx_AT(data);
+	if (!GSM_Core_Tx_AT(data)) {
+		return FALSE;
+	}	
+	return TRUE;
 }
 
 bool GSM_AT_Receive(char *data, GSM_RECEIVE_RECORD *pReceive)
@@ -36,11 +40,21 @@ bool GSM_AT_Receive(char *data, GSM_RECEIVE_RECORD *pReceive)
 	// 去掉了首尾的\r\n，没有则不去掉
 	pReceive->Data_Count = Remove_CR(pReceive->Data, GSM_Command_Record.Rx_Data_Count);
 	
+	// 清除GSM_Command_Record.Rx_Data
+//	memset(GSM_Command_Record.Rx_Data, 0, sizeof(GSM_Command_Record.Rx_Data));
+//	GSM_Command_Record.Rx_Data[0] = '\0';
+//	GSM_Command_Record.Rx_Data_Count = 0;
+	GSM_Command_Record.Status = GSM_STATUS_COMMAND_IDLE;
+	
 	return TRUE;
 }
 
 bool GSM_AT_Recall(char *data, char *waitstr)
 {	
+//	memset(&Receive, 0, sizeof(Receive));
+	Receive.Data[0] = '\0';
+	Receive.Data_Count = 0;
+	
 	if (!GSM_AT_Receive(data, &Receive)) {
 		return FALSE;
 	}
@@ -54,21 +68,21 @@ bool GSM_AT_Recall(char *data, char *waitstr)
 
 void GSM_Receive_KeyWord(void)
 {
-	// 数据搬移
+/*	// 数据搬移
 	memcpy(Receive.Data, GSM_Data_Record.Rx_Data, GSM_Data_Record.Rx_Data_Count);
 	// 去掉了首尾的\r\n，没有则不去掉
 	Receive.Data_Count = Remove_CR(Receive.Data, GSM_Data_Record.Rx_Data_Count);
-	
-	if (strncmp((char*)Receive.Data, "Call Ready", strlen("Call Ready")) == 0) {
-		// 初始化GSM和GPSR
-	//	GSM_Config();
-	//	GPRS_Init();
-		
-	} else if (strncmp((char*)Receive.Data, "", strlen("")) == 0) {
-	
-	} else if (strncmp((char*)Receive.Data, "", strlen("")) == 0) {
-	
+*/
+	if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nCall Ready\r\n", strlen("\r\nCall Ready\r\n")) == 0) {
+		// 重启GPRSSend任务
+		Task_Execute = EXECUTE;
+		OSTaskResume(MONITOR_TASK_PRIO);
+	} else if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")) == 0) {
+		// 重启GPRSSend任务
+		Task_Execute = EXECUTE;
+		OSTaskResume(MONITOR_TASK_PRIO);
 	}
+
 }
 
 void GSM_Receive_Data(GSM_RECEIVE_RECORD *pReceive)
@@ -80,21 +94,30 @@ void GSM_Receive_Data(GSM_RECEIVE_RECORD *pReceive)
 			// 数据全部接收，这里\r\n不去掉
 			// pReceive->Data_Count = Remove_CR(pReceive->Data, GSM_Data_Record.Rx_Data_Count);
 			pReceive->Data_Count = GSM_Data_Record.Rx_Data_Count;
+			// 清空GSM_Data_Record.Rx_Data
+//			memset(GSM_Data_Record.Rx_Data, 0, sizeof(GSM_Data_Record.Rx_Data));
+//			GSM_Data_Record.Rx_Data[0] = '\0';
+//			GSM_Data_Record.Rx_Data_Count = 0;
 			
 			break;
 		}
 	}
+	GSM_Data_Record.Status = GSM_STATUS_DATA_IDLE;
 }
 
 bool GSM_Receive_Recall(char *waitstr)
 {
-		GSM_Receive_Data(&Receive);
-		// 去掉了首尾的\r\n，没有则不去掉
-		Receive.Data_Count = Remove_CR(Receive.Data, GSM_Data_Record.Rx_Data_Count);
-		if (strncmp((char*)Receive.Data, waitstr, strlen(waitstr)) != 0) {
-			return FALSE;
-		}
-		return TRUE;
+//	memset(&Receive, 0, sizeof(Receive));
+	Receive.Data[0] = '\0';
+	Receive.Data_Count = 0;
+	
+	GSM_Receive_Data(&Receive);
+	// 去掉了首尾的\r\n，没有则不去掉
+	Receive.Data_Count = Remove_CR(Receive.Data, Receive.Data_Count);
+	if (strncmp((char*)Receive.Data, waitstr, strlen(waitstr)) != 0) {
+		return FALSE;
+	}
+	return TRUE;
 }
 
 int Remove_CR(UINT8* Data, int count)
@@ -103,6 +126,7 @@ int Remove_CR(UINT8* Data, int count)
 	int temp_c = count;
 	// 去除结尾回车
 	if ((*(Data+count-2) == '\r') && (*(Data+count-1) == '\n')) {
+//		*(Data+count-2) = '\0';
 		temp_c = temp_c - 2;
 	}
 	// 去除开头回车
@@ -110,6 +134,7 @@ int Remove_CR(UINT8* Data, int count)
 		for (i = 0; i < temp_c-2; i++) {
 			*(Data + i) = *(Data + i + 2);
 		}
+//		*(Data + temp_c-2) = '\0';
 		temp_c = temp_c - 2;
 	}
 	return temp_c;

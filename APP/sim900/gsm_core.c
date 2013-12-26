@@ -3,6 +3,15 @@
  *
  * 注意：该协议存在如下机制，若发送命令等待返回值超时，则超时后返回的第一段数据被抛弃！
  *
+ * 
+ * BUG解决注意点：
+ * 1、CORE层的清空操作只在超时和串口接收中断中，而且只需要清空相应count
+ * 2、receive后只需要改变相应状态，无需对CORE层的接收缓冲区清空
+ * 3、数据的比较部分都在receive之后，不能再缓冲区里面比较
+ *
+ *
+ * @TODO 当TCP 正常close失败后，再次发起连接是会返回already connected，如何解决？
+ *
  * @author 王特、矫东航
  */
 
@@ -172,7 +181,7 @@ void Timeout_Data(void)
 		// 关闭TIM3定时器
 	//	GSM_ShutTIMData();
 		
-	//	GSM_Receive_KeyWord();
+		GSM_Receive_KeyWord();
 	}
 	// 关闭TIM3定时器
 	GSM_ShutTIMData();

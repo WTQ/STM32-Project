@@ -74,4 +74,10 @@ typedef struct _GSM_RECEIVE_RECORD {
 	UINT16 Data_Count;
 } GSM_RECEIVE_RECORD;
 
+// GPRS任务操作信号
+typedef enum _TASK_EXECUTE {
+	IDLE = 0,
+	EXECUTE
+} TASK_EXECUTE;
+
 #endif
