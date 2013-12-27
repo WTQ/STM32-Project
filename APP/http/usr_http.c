@@ -1,6 +1,7 @@
 #include "usr_http.h"
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "gsm_gprs.h"
 
@@ -117,15 +118,9 @@ bool GSM_Receive_Record(GSM_RECEIVE_RECORD *pReceive)
 // 计算收到的数字
 int Calculate(GSM_RECEIVE_RECORD *pReceive)
 {
-	int Num = 0;
-	int n;
-	for (n = 0; n < pReceive->Data_Count; n++) {
-		if ((pReceive->Data[n] > 39)
-			|| (pReceive->Data[n] < 30)) {
-			break;
-		} else {
-			Num = Num * 10 + pReceive->Data[n] - 30;
-		}
-	}
+	int Num;
+	char buffer[10] = {0};
+	memcpy(buffer, pReceive->Data, pReceive->Data_Count);
+	Num = atoi(buffer);
 	return Num;
 }

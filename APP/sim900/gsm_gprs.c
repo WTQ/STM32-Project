@@ -76,12 +76,12 @@ bool GPRS_TCP_Receive(GSM_RECEIVE_RECORD *pReceive)
 	GSM_Receive_Data(pReceive);
 	
 	// 识别命令信息是否正确
-	if (strncmp((char *)pReceive->Data, "+IPD,", 5) != 0) {
+	if (strncmp((char *)pReceive->Data, "\r\n+IPD,", 7) != 0) {
 		return FALSE;
 	}
 	
 	// 读取信息长度信息
-	for (pos=5; ((pReceive->Data)[pos]!=':') && (pos<pReceive->Data_Count); pos++) {
+	for (pos=7; ((pReceive->Data)[pos]!=':') && (pos<pReceive->Data_Count); pos++) {
 		length = length * 10 + (int)((pReceive->Data)[pos]) - 48; // ”0“的ASCII码为十进制的48
 	}
 	
