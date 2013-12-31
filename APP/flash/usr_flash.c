@@ -69,7 +69,7 @@ void SetWMHeader(void)
 	Usr_Flash_Write(WM_DATA_ADDR_START + IDSTRING_MAX_LEN, (uint8_t *)&WMHeader.FirstID, WMDATA_ID_MAX_LEN);
 }
 
-bool GetWM(WM_Data *WMData, int8_t index)
+bool GetWM(WM_Data *WMData, int32_t index)
 {
 	uint32_t Address;
 	if(index > WMFlag.WM_Data_Num || index < 0) {
@@ -140,7 +140,7 @@ void SetRecordHeader(void)
 	Usr_Flash_Write(WM_RECORD_ADDR_START + IDSTRING_MAX_LEN, (uint8_t *)&WMHeader.FirstID, RECORD_ID_MAX_LEN);
 }
 
-bool GetRecord(WM_Record *WMRecord, int8_t index)
+bool GetRecord(WM_Record *WMRecord, int32_t index)
 {
 	uint32_t Address;
 	if(index > WMFlag.WM_Record_Num || index < 0) {
