@@ -90,7 +90,7 @@ static void App_Monitor(void *p_arg)
 
 static void App_GPRSSend(void* p_arg)
 {
-	uint8_t index = 0;
+	uint32_t index = 0;
 //	int len;
 	WM_Record WMRecord;
 	// HTTP发送的缓冲区
@@ -119,11 +119,11 @@ static void App_GPRSSend(void* p_arg)
 //	OSTimeDlyHMSM(0,0,1,0);
 	
 
-//	OSTimeDlyHMSM(0,0,10,0);
-	if (Task_Execute == IDLE) {
-		while (!GSM_Receive_Recall("Call Ready")) {
-		}
-	}
+	OSTimeDlyHMSM(0,0,10,0);
+//	if (Task_Execute == IDLE) {
+//		while (!GSM_Receive_Recall("Call Ready")) {
+//		}
+//	}
 	// 初始化GSM和GPSR
 	GSM_Config();
 	GPRS_Init();

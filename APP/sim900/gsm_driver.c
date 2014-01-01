@@ -10,6 +10,7 @@
 
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_tim.h"
+#include "ucos_ii.h"
 
 #include "gsm_core.h"
 
@@ -176,6 +177,20 @@ void GSM_USART_GPIO(void)
 #endif
 }
 
+void GSM_Reset_Int(void)
+{
+	GPIO_InitTypeDef GPIO_InitStructure;
+
+	// …Ë÷√PD15
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_Init(GPIOD, &GPIO_InitStructure);
+	
+	//»Ìº˛ø™∆ÙSIM900
+	GSM_Reset_Set();	
+}
+
 void GSM_USART_Config(void)
 {
 	USART_InitTypeDef USART_InitStructure;
@@ -256,6 +271,16 @@ void GSM_USART_Rx(void)
 	}
 }
 
+void GSM_Reset_Set(void)
+{
+	GPIO_SetBits(GPIOD, GPIO_Pin_15);
+	OSTimeDlyHMSM(0,0,2,0);	
+	GPIO_ResetBits(GPIOA, GPIO_Pin_15);
+	OSTimeDlyHMSM(0,0,1,200);	
+	GPIO_SetBits(GPIOD, GPIO_Pin_15);
+//	OSTimeDlyHMSM(0,0,2,500);
+}
+
 void GSM_USART_Init(void)
 {
 	GSM_USART_GPIO();
@@ -268,5 +293,6 @@ void GSM_Driver_Int(void)
 	GSM_CommandTimeInit();
 	GSM_DataTimeInit();
 	GSM_USART_Init();
+	GSM_Reset_Int();
 	//GSM_Init();
 }
