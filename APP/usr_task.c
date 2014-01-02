@@ -90,7 +90,7 @@ static void App_Monitor(void *p_arg)
 
 static void App_GPRSSend(void* p_arg)
 {
-	uint32_t index = 0;
+	int32_t index = 0;
 //	int len;
 	WM_Record WMRecord;
 	// HTTP·¢ËÍµÄ»º³åÇø

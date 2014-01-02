@@ -79,14 +79,14 @@ bool Usr_Flash_Erase(uint32_t Start_Address);
 // WM_Data相关的操作封装
 bool GetWMHeader(WM_Header * WMHeader);
 void SetWMHeader(void);
-bool GetWM(WM_Data *WMData, int8_t index);
+bool GetWM(WM_Data *WMData, int32_t index);
 bool WriteWM(WM_Data *WMData);
 bool EraseWM(void);
 
 // WM_Record相关操作封转
 bool GetRecordHeader(WM_Header * WMHeader);
 void SetRecordHeader(void);
-bool GetRecord(WM_Record *WMRecord, int8_t index);
+bool GetRecord(WM_Record *WMRecord, int32_t index);
 bool WriteRecord(WM_Record *WMRecord);
 bool EraseRecord(void);
 uint32_t GetRecordLastID(void);
