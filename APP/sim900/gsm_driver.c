@@ -181,11 +181,11 @@ void GSM_Reset_Int(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 
-	// 设置PD15
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
+	// 设置PA8
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-	GPIO_Init(GPIOD, &GPIO_InitStructure);
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
 	
 	//软件开启SIM900
 	GSM_Reset_Set();	
@@ -273,11 +273,11 @@ void GSM_USART_Rx(void)
 
 void GSM_Reset_Set(void)
 {
-	GPIO_SetBits(GPIOD, GPIO_Pin_15);
+	GPIO_SetBits(GPIOA, GPIO_Pin_8);
 	OSTimeDlyHMSM(0,0,2,0);	
-	GPIO_ResetBits(GPIOA, GPIO_Pin_15);
+	GPIO_ResetBits(GPIOA, GPIO_Pin_8);
 	OSTimeDlyHMSM(0,0,1,200);	
-	GPIO_SetBits(GPIOD, GPIO_Pin_15);
+	GPIO_SetBits(GPIOA, GPIO_Pin_8);
 //	OSTimeDlyHMSM(0,0,2,500);
 }
 
