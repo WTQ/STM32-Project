@@ -50,4 +50,8 @@ void GSM_USART_Rx(void);
 void GSM_USART_Init(void);
 // 驱动初始化
 void GSM_Driver_Int(void);
+// 复位GPIO初始化
+void GSM_Reset_Int(void);
+// GSM复位设置
+void GSM_Reset_Set(void);
 #endif
