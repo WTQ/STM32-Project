@@ -73,15 +73,21 @@ void GSM_Receive_KeyWord(void)
 	// 去掉了首尾的\r\n，没有则不去掉
 	Receive.Data_Count = Remove_CR(Receive.Data, GSM_Data_Record.Rx_Data_Count);
 */
-	if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nCall Ready\r\n", strlen("\r\nCall Ready\r\n")) == 0) {
+/*	if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nCall Ready\r\n", strlen("\r\nCall Ready\r\n")) == 0) {
 		// 重启GPRSSend任务
 		Task_Execute = EXECUTE;
 		OSTaskResume(MONITOR_TASK_PRIO);
-	} else if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")) == 0) {
+	} else */if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")) == 0) {
 		// 重启GPRSSend任务
 		Task_Execute = EXECUTE;
 		OSTaskResume(MONITOR_TASK_PRIO);
 	} else if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nSTATE: TCP CLOSED\r\n\r\nCONNECT FAIL\r\n", strlen("\r\nSTATE: TCP CLOSED\r\n\r\nCONNECT FAIL\r\n")) == 0) {
+		// 重启GPRSSend任务
+		Task_Execute = EXECUTE;
+		OSTaskResume(MONITOR_TASK_PRIO);
+	} else if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\n+PDP: DEACT\r\n\r\nERROR\r\n", strlen("\r\n+PDP: DEACT\r\n\r\nERROR\r\n")) == 0) {
+		// 重启SIM900模块
+		GSM_Reset_Set();
 		// 重启GPRSSend任务
 		Task_Execute = EXECUTE;
 		OSTaskResume(MONITOR_TASK_PRIO);

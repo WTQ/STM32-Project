@@ -278,7 +278,7 @@ void GSM_Reset_Set(void)
 	GPIO_ResetBits(GPIOA, GPIO_Pin_8);
 	OSTimeDlyHMSM(0,0,1,500);	
 	GPIO_SetBits(GPIOA, GPIO_Pin_8);
-//	OSTimeDlyHMSM(0,0,2,500);
+	OSTimeDlyHMSM(0,0,2,500);
 }
 
 void GSM_USART_Init(void)
