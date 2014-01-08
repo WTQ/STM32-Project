@@ -18,6 +18,8 @@ bool GSM_AT_Only(char *data);
 bool GSM_AT_Receive(char *data, GSM_RECEIVE_RECORD *pReceive);
 // 发送AT命令，并期望接收recall数据
 bool GSM_AT_Recall(char *data, char *waitstr);
+// 发送AT命令，并期望接收OK/ERROR/ERROR...ALREADY CONNECT
+int GSM_AT_Recall_Connect(char *data);
 
 // 接收关键字
 void GSM_Receive_KeyWord(void);

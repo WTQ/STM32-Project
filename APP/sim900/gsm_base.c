@@ -66,6 +66,28 @@ bool GSM_AT_Recall(char *data, char *waitstr)
 	}
 }
 
+int GSM_AT_Recall_Connect(char *data)
+{	
+//	memset(&Receive, 0, sizeof(Receive));
+	Receive.Data[0] = '\0';
+	Receive.Data_Count = 0;
+	
+	if (!GSM_AT_Receive(data, &Receive)) {
+		return FALSE;
+	}
+	// 上面函数已经去掉了首尾的\r\n，这里不用重复删除了
+	if (strncmp((char*)Receive.Data, "OK", strlen("OK")) == 0) {
+		return 1;
+	}
+	if (strncmp((char*)Receive.Data, "ERROR\r\n\r\nALREADY CONNECT", strlen("ERROR\r\n\r\nALREADY CONNECT")) == 0) {
+		return -2;
+	}
+	if (strncmp((char*)Receive.Data, "ERROR", strlen("ERROR")) == 0) {
+		return -1;
+	}
+	return 0;
+}
+
 void GSM_Receive_KeyWord(void)
 {
 /*	// 数据搬移
@@ -78,7 +100,7 @@ void GSM_Receive_KeyWord(void)
 		// 重启GPRSSend任务
 		Task_Execute = EXECUTE;
 		OSTaskResume(MONITOR_TASK_PRIO);
-	} else */if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")) == 0) {
+	} else if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")) == 0) {
 		// 重启GPRSSend任务
 		Task_Execute = EXECUTE;
 		OSTaskResume(MONITOR_TASK_PRIO);
@@ -86,7 +108,13 @@ void GSM_Receive_KeyWord(void)
 		// 重启GPRSSend任务
 		Task_Execute = EXECUTE;
 		OSTaskResume(MONITOR_TASK_PRIO);
-	} else if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\n+PDP: DEACT\r\n\r\nERROR\r\n", strlen("\r\n+PDP: DEACT\r\n\r\nERROR\r\n")) == 0) {
+	} else */if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\n+PDP: DEACT\r\n\r\nERROR\r\n", strlen("\r\n+PDP: DEACT\r\n\r\nERROR\r\n")) == 0) {
+		// 重启SIM900模块
+		GSM_Reset_Set();
+		// 重启GPRSSend任务
+		Task_Execute = EXECUTE;
+		OSTaskResume(MONITOR_TASK_PRIO);
+	} else if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nSTATE: PDP DEACT\r\n\r\nCONNECT FAIL\r\n", strlen("\r\nSTATE: PDP DEACT\r\n\r\nCONNECT FAIL\r\n")) == 0) {
 		// 重启SIM900模块
 		GSM_Reset_Set();
 		// 重启GPRSSend任务
@@ -125,13 +153,13 @@ int GSM_Receive_Data_Connect(void)
 	GSM_Receive_Data(&Receive);
 	// 去掉了首尾的\r\n，没有则不去掉
 	Receive.Data_Count = Remove_CR(Receive.Data, Receive.Data_Count);
-	if (strncmp((char*)Receive.Data, "ALREADY CONNECT", strlen("ALREADY CONNECT")) != 0) {
+	if (strncmp((char*)Receive.Data, "ALREADY CONNECT", strlen("ALREADY CONNECT")) == 0) {
 		return -2;
 	}
-	if (strncmp((char*)Receive.Data, "CONNECT FAIL", strlen("CONNECT FAIL")) != 0) {
+	if (strncmp((char*)Receive.Data, "STATE: TCP CLOSED\r\n\r\nCONNECT FAIL", strlen("STATE: TCP CLOSED\r\n\r\nCONNECT FAIL")) == 0) {
 		return -1;
 	}
-	if (strncmp((char*)Receive.Data, "CONNECT OK", strlen("CONNECT OK")) != 0) {
+	if (strncmp((char*)Receive.Data, "CONNECT OK", strlen("CONNECT OK")) == 0) {
 		return 1;
 	}
 	return 0;
