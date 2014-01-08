@@ -76,11 +76,11 @@ void GSM_Receive_KeyWord(void)
 	if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nCall Ready\r\n", strlen("\r\nCall Ready\r\n")) == 0) {
 		// 重启GPRSSend任务
 		Task_Execute = EXECUTE;
-		OSTaskResume(MONITOR_TASK_PRIO);
+		// OSTaskResume(MONITOR_TASK_PRIO);
 	} else if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")) == 0) {
 		// 重启GPRSSend任务
 		Task_Execute = EXECUTE;
-		OSTaskResume(MONITOR_TASK_PRIO);
+		// OSTaskResume(MONITOR_TASK_PRIO);
 	}
 
 }
@@ -103,6 +103,27 @@ void GSM_Receive_Data(GSM_RECEIVE_RECORD *pReceive)
 		}
 	}
 	GSM_Data_Record.Status = GSM_STATUS_DATA_IDLE;
+}
+
+int GSM_Receive_Data_Connect(void)
+{
+//	memset(&Receive, 0, sizeof(Receive));
+	Receive.Data[0] = '\0';
+	Receive.Data_Count = 0;
+	
+	GSM_Receive_Data(&Receive);
+	// 去掉了首尾的\r\n，没有则不去掉
+	Receive.Data_Count = Remove_CR(Receive.Data, Receive.Data_Count);
+	if (strncmp((char*)Receive.Data, "ALREADY CONNECT", strlen("ALREADY CONNECT")) != 0) {
+		return -2;
+	}
+	if (strncmp((char*)Receive.Data, "CONNECT FAIL", strlen("CONNECT FAIL")) != 0) {
+		return -1;
+	}
+	if (strncmp((char*)Receive.Data, "CONNECT OK", strlen("CONNECT OK")) != 0) {
+		return 1;
+	}
+	return 0;
 }
 
 bool GSM_Receive_Recall(char *waitstr)

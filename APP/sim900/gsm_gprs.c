@@ -42,19 +42,24 @@ void GPRS_Init(void)
 
 bool GPRS_TCP_Connect(char *IP, char *PORT)
 {
+	int connect_state = 0;
 	char TCP_str[50] = "AT+CIPSTART=\"TCP\",\"";
 	strcat(TCP_str, IP);
 	strcat(TCP_str, "\",");
 	strcat(TCP_str, PORT);
 	strcat(TCP_str, "\r\n");
-	// 建立TCP连接
-	GSM_AT_Recall(TCP_str, "OK");
 	
 	// 阻塞等待建立成功消息
-	while (!GSM_Receive_Recall("CONNECT OK")) {
+	while ((connect_state != 1) && (connect_state != -2)) { // [-2] ALREADY CONNECT @todo 需测试该状态下是否可以继续进行下面的操作
+		
+		// 阻塞等待建立TCP连接
+		while (!GSM_AT_Recall(TCP_str, "OK")) {
+			OSTimeDlyHMSM(0,0,1,0);
+		}
+	
+		connect_state = GSM_Receive_Data_Connect();
 	}
 	return TRUE;
-	
 }
 
 bool GPRS_TCP_Send(char *Data)
@@ -82,7 +87,7 @@ bool GPRS_TCP_Receive(GSM_RECEIVE_RECORD *pReceive)
 	
 	// 读取信息长度信息
 	for (pos=7; ((pReceive->Data)[pos]!=':') && (pos<pReceive->Data_Count); pos++) {
-		length = length * 10 + (int)((pReceive->Data)[pos]) - 48; // ”0“的ASCII码为十进制的48
+		length = length * 10 + (pReceive->Data)[pos] - 0x30; // ”0“的ASCII码为0x30
 	}
 	
 	// 防止未接收到“:”而引发的溢出问题
