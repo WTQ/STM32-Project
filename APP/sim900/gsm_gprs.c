@@ -42,19 +42,24 @@ void GPRS_Init(void)
 
 bool GPRS_TCP_Connect(char *IP, char *PORT)
 {
+	int connect_state = 0;
 	char TCP_str[50] = "AT+CIPSTART=\"TCP\",\"";
 	strcat(TCP_str, IP);
 	strcat(TCP_str, "\",");
 	strcat(TCP_str, PORT);
 	strcat(TCP_str, "\r\n");
-	// 建立TCP连接
-	GSM_AT_Recall(TCP_str, "OK");
 	
 	// 阻塞等待建立成功消息
-	while (!GSM_Receive_Recall("CONNECT OK")) {
+	while ((connect_state != 1) && (connect_state != -2)) { // [-2] ALREADY CONNECT @todo 需测试该状态下是否可以继续进行下面的操作
+		
+		// 阻塞等待建立TCP连接
+		while (!GSM_AT_Recall(TCP_str, "OK")) {
+			OSTimeDlyHMSM(0,0,1,0);
+		}
+	
+		connect_state = GSM_Receive_Data_Connect();
 	}
 	return TRUE;
-	
 }
 
 bool GPRS_TCP_Send(char *Data)
