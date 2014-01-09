@@ -293,6 +293,6 @@ void GSM_Driver_Int(void)
 	GSM_CommandTimeInit();
 	GSM_DataTimeInit();
 	GSM_USART_Init();
-	GSM_Reset_Int();
+	//GSM_Reset_Int();
 	//GSM_Init();
 }

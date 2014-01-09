@@ -108,7 +108,7 @@ void GSM_Receive_KeyWord(void)
 		// 重启GPRSSend任务
 		Task_Execute = EXECUTE;
 		OSTaskResume(MONITOR_TASK_PRIO);
-	} else */if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")) == 0) {
+	} else if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")) == 0) {
 		// 重启GPRSSend任务
 		Task_Execute = EXECUTE;
 		OSTaskResume(MONITOR_TASK_PRIO);
@@ -124,7 +124,7 @@ void GSM_Receive_KeyWord(void)
 		// 重启GPRSSend任务
 		Task_Execute = EXECUTE;
 		OSTaskResume(MONITOR_TASK_PRIO);
-	}
+	}*/
 
 }
 

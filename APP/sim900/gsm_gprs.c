@@ -32,10 +32,10 @@ void GPRS_Init(void)
 	GSM_AT_Recall("AT+CSTT\r\n", "OK");
 	
 	// 激活移动场景
-//	GSM_AT_Recall("AT+CIICR\r\n", "OK");
+	GSM_AT_Recall("AT+CIICR\r\n", "OK");
 	
 	// 获取本地IP地址(此处没有接收地址字符串)
-//	GSM_AT_Receive("AT+CIFSR", &Receive);
+	GSM_AT_Receive("AT+CIFSR", &Receive);
 	//GSM_AT_Only("AT+CIFSR"); // 测试这句不行，因为有返回值
 	
 }
@@ -59,7 +59,7 @@ bool GPRS_TCP_Connect(char *IP, char *PORT)
 			if ((AT_state == 1) || (AT_state == -2)) {
 				break;
 			}
-//			OSTimeDlyHMSM(0,0,2,0);
+			OSTimeDlyHMSM(0,0,1,0);
 		}
 		connect_state = GSM_Receive_Data_Connect();
 	}

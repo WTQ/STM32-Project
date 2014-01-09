@@ -119,10 +119,10 @@ static void App_GPRSSend(void* p_arg)
 //	OSTimeDlyHMSM(0,0,1,0);
 	
 
-//	OSTimeDlyHMSM(0,0,10,0);
+	OSTimeDlyHMSM(0,0,10,0);
 //	if (Task_Execute == IDLE) {
-		while (!GSM_Receive_Recall("Call Ready")) {
-		}
+//		while (!GSM_Receive_Recall("Call Ready")) {
+//		}
 //	}
 	// ≥ı ºªØGSM∫ÕGPSR
 	GSM_Config();
