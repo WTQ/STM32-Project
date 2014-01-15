@@ -8,7 +8,7 @@
 
 #include <string.h>
 
-extern GSM_RECEIVE_RECORD Receive;
+extern GSM_RECEIVE_RECORD Receive_AT;
 
 void GSM_Config(void)
 {
@@ -35,7 +35,7 @@ void GPRS_Init(void)
 	GSM_AT_Recall("AT+CIICR\r\n", "OK");
 	
 	// 获取本地IP地址(此处没有接收地址字符串)
-	GSM_AT_Receive("AT+CIFSR", &Receive);
+	GSM_AT_Receive("AT+CIFSR", &Receive_AT);
 	//GSM_AT_Only("AT+CIFSR"); // 测试这句不行，因为有返回值
 	
 }
@@ -51,17 +51,15 @@ bool GPRS_TCP_Connect(char *IP, char *PORT)
 	strcat(TCP_str, "\r\n");
 	
 	// 阻塞等待建立成功消息
-	while ((connect_state != 1) && (connect_state != -2)) { // [-2] ALREADY CONNECT @todo 需测试该状态下是否可以继续进行下面的操作
+	while (connect_state != 1) { 
 		
 		// 阻塞等待建立TCP连接
-		while (1) {
-			AT_state = GSM_AT_Recall_Connect(TCP_str);
-			if ((AT_state == 1) || (AT_state == -2)) {
-				break;
-			}
+		while ((AT_state != 1) && (AT_state != -2)) {
 			OSTimeDlyHMSM(0,0,2,0);
+			AT_state = GSM_AT_Recall_Connect(TCP_str);			
 		}
 		connect_state = GSM_Receive_Data_Connect();
+		connect_state = connect_state;
 	}
 	return TRUE;
 }

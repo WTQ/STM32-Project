@@ -186,6 +186,7 @@ void GSM_Reset_Int(void)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	GPIO_SetBits(GPIOA, GPIO_Pin_8);
 	
 	//Èí¼þ¿ªÆôSIM900
 //	GSM_Reset_Set();	
@@ -273,8 +274,8 @@ void GSM_USART_Rx(void)
 
 void GSM_Reset_Set(void)
 {
-	GPIO_SetBits(GPIOA, GPIO_Pin_8);
-	OSTimeDlyHMSM(0,0,2,0);	
+//	GPIO_SetBits(GPIOA, GPIO_Pin_8);
+//	OSTimeDlyHMSM(0,0,2,0);	
 	GPIO_ResetBits(GPIOA, GPIO_Pin_8);
 	OSTimeDlyHMSM(0,0,1,500);	
 	GPIO_SetBits(GPIOA, GPIO_Pin_8);
@@ -294,5 +295,6 @@ void GSM_Driver_Int(void)
 	GSM_DataTimeInit();
 	GSM_USART_Init();
 	GSM_Reset_Int();
+	GSM_Reset_Set();
 	//GSM_Init();
 }
