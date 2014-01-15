@@ -52,42 +52,6 @@ bool GSM_AT_Receive(char *data, GSM_RECEIVE_RECORD *pReceive)
 
 bool GSM_AT_Recall(char *data, char *waitstr)
 {	
-
-bool GSM_AT_Only(char *data)
-{	
-	if ((GSM_Command_Record.Status == GSM_STATUS_COMMAND_ECHO)
-			|| (GSM_Command_Record.Status == GSM_STATUS_COMMAND_EXECUTE)
-			|| (GSM_Command_Record.Status == GSM_STATUS_COMMAND_DATA)) {
-		return FALSE;
-	}
-	if (!GSM_Core_Tx_AT(data)) {
-		return FALSE;
-	}	
-	return TRUE;
-}
-
-bool GSM_AT_Receive(char *data, GSM_RECEIVE_RECORD *pReceive)
-{
-	if (!GSM_AT_Only(data)) {
-		return FALSE;
-	}
-	// 数据搬移
-	memcpy(pReceive->Data, GSM_Command_Record.Rx_Data, GSM_Command_Record.Rx_Data_Count);
-	
-	// 去掉了首尾的\r\n，没有则不去掉
-	pReceive->Data_Count = Remove_CR(pReceive->Data, GSM_Command_Record.Rx_Data_Count);
-	
-	// 清除GSM_Command_Record.Rx_Data
-//	memset(GSM_Command_Record.Rx_Data, 0, sizeof(GSM_Command_Record.Rx_Data));
-//	GSM_Command_Record.Rx_Data[0] = '\0';
-//	GSM_Command_Record.Rx_Data_Count = 0;
-	GSM_Command_Record.Status = GSM_STATUS_COMMAND_IDLE;
-	
-	return TRUE;
-}
-
-bool GSM_AT_Recall(char *data, char *waitstr)
-{	
 //	memset(&Receive_AT, 0, sizeof(Receive_AT));
 	Receive_AT.Data[0] = '\0';
 	Receive_AT.Data_Count = 0;
