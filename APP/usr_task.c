@@ -180,6 +180,7 @@ static void App_GPRSSend(void* p_arg)
 //				GPRSBuffer[len] = 0x1A;
 //				GPRSBuffer[len + 1] = '\0';
 				GPRS_TCP_Send(GPRSBuffer);
+				GSM_Receive_Record(&Receive); // @todo 未接到success要重传
 				GRRS_TCP_Closed();
 				Next_Record.Record_ID++;
 			}
@@ -191,6 +192,7 @@ static void App_GPRSSend(void* p_arg)
 //			GPRSBuffer[len] = 0x1A;
 //			GPRSBuffer[len + 1] = '\0';
 			GPRS_TCP_Send(GPRSBuffer);
+			GSM_Receive_Record(&Receive); // @todo 未接到success要重传
 			GRRS_TCP_Closed();
 		}
 

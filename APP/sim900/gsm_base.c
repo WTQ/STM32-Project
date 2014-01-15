@@ -14,7 +14,8 @@
 extern GSM_STATUS_TRANS GSM_STATUS;
 extern GSM_COMMAND_RECORD GSM_Command_Record;
 extern GSM_DATA_RECORD GSM_Data_Record;
-GSM_RECEIVE_RECORD Receive;
+GSM_RECEIVE_RECORD Receive_AT;
+GSM_RECEIVE_RECORD Receive_Data;
 
 bool GSM_AT_Only(char *data)
 {	
@@ -51,15 +52,51 @@ bool GSM_AT_Receive(char *data, GSM_RECEIVE_RECORD *pReceive)
 
 bool GSM_AT_Recall(char *data, char *waitstr)
 {	
-//	memset(&Receive, 0, sizeof(Receive));
-	Receive.Data[0] = '\0';
-	Receive.Data_Count = 0;
+
+bool GSM_AT_Only(char *data)
+{	
+	if ((GSM_Command_Record.Status == GSM_STATUS_COMMAND_ECHO)
+			|| (GSM_Command_Record.Status == GSM_STATUS_COMMAND_EXECUTE)
+			|| (GSM_Command_Record.Status == GSM_STATUS_COMMAND_DATA)) {
+		return FALSE;
+	}
+	if (!GSM_Core_Tx_AT(data)) {
+		return FALSE;
+	}	
+	return TRUE;
+}
+
+bool GSM_AT_Receive(char *data, GSM_RECEIVE_RECORD *pReceive)
+{
+	if (!GSM_AT_Only(data)) {
+		return FALSE;
+	}
+	// 数据搬移
+	memcpy(pReceive->Data, GSM_Command_Record.Rx_Data, GSM_Command_Record.Rx_Data_Count);
 	
-	if (!GSM_AT_Receive(data, &Receive)) {
+	// 去掉了首尾的\r\n，没有则不去掉
+	pReceive->Data_Count = Remove_CR(pReceive->Data, GSM_Command_Record.Rx_Data_Count);
+	
+	// 清除GSM_Command_Record.Rx_Data
+//	memset(GSM_Command_Record.Rx_Data, 0, sizeof(GSM_Command_Record.Rx_Data));
+//	GSM_Command_Record.Rx_Data[0] = '\0';
+//	GSM_Command_Record.Rx_Data_Count = 0;
+	GSM_Command_Record.Status = GSM_STATUS_COMMAND_IDLE;
+	
+	return TRUE;
+}
+
+bool GSM_AT_Recall(char *data, char *waitstr)
+{	
+//	memset(&Receive_AT, 0, sizeof(Receive_AT));
+	Receive_AT.Data[0] = '\0';
+	Receive_AT.Data_Count = 0;
+	
+	if (!GSM_AT_Receive(data, &Receive_AT)) {
 		return FALSE;
 	}
 	// 上面函数已经去掉了首尾的\r\n，这里不用重复删除了
-	if (strncmp((char*)Receive.Data, waitstr, strlen(waitstr)) != 0) {
+	if (strncmp((char*)Receive_AT.Data, waitstr, strlen(waitstr)) != 0) {
 		return FALSE;
 	} else {
 		return TRUE;
@@ -68,21 +105,25 @@ bool GSM_AT_Recall(char *data, char *waitstr)
 
 int GSM_AT_Recall_Connect(char *data)
 {	
-//	memset(&Receive, 0, sizeof(Receive));
-	Receive.Data[0] = '\0';
-	Receive.Data_Count = 0;
+//	memset(&Receive_AT, 0, sizeof(Receive_AT));
+	Receive_AT.Data[0] = '\0';
+	Receive_AT.Data_Count = 0;
 	
-	if (!GSM_AT_Receive(data, &Receive)) {
+
+	if (!GSM_AT_Receive(data, &Receive_AT)) {
 		return FALSE;
 	}
 	// 上面函数已经去掉了首尾的\r\n，这里不用重复删除了
-	if (strncmp((char*)Receive.Data, "OK", strlen("OK")) == 0) {
+
+	if (strncmp((char*)Receive_AT.Data, "OK", strlen("OK")) == 0) {
 		return 1;
 	}
-	if (strncmp((char*)Receive.Data, "ERROR\r\n\r\nALREADY CONNECT", strlen("ERROR\r\n\r\nALREADY CONNECT")) == 0) {
+
+	if (strncmp((char*)Receive_AT.Data, "ERROR\r\n\r\nALREADY CONNECT", strlen("ERROR\r\n\r\nALREADY CONNECT")) == 0) {
 		return -2;
 	}
-	if (strncmp((char*)Receive.Data, "ERROR", strlen("ERROR")) == 0) {
+
+	if (strncmp((char*)Receive_AT.Data, "ERROR", strlen("ERROR")) == 0) {
 		return -1;
 	}
 	return 0;
@@ -91,9 +132,11 @@ int GSM_AT_Recall_Connect(char *data)
 void GSM_Receive_KeyWord(void)
 {
 /*	// 数据搬移
-	memcpy(Receive.Data, GSM_Data_Record.Rx_Data, GSM_Data_Record.Rx_Data_Count);
+
+	memcpy(Receive_Data.Data, GSM_Data_Record.Rx_Data, GSM_Data_Record.Rx_Data_Count);
 	// 去掉了首尾的\r\n，没有则不去掉
-	Receive.Data_Count = Remove_CR(Receive.Data, GSM_Data_Record.Rx_Data_Count);
+
+	Receive_Data.Data_Count = Remove_CR(Receive_Data.Data, GSM_Data_Record.Rx_Data_Count);
 */
 
 /*	if (strncmp((char*)GSM_Data_Record.Rx_Data, "\r\nCall Ready\r\n", strlen("\r\nCall Ready\r\n")) == 0) {
@@ -150,21 +193,25 @@ void GSM_Receive_Data(GSM_RECEIVE_RECORD *pReceive)
 
 int GSM_Receive_Data_Connect(void)
 {
-//	memset(&Receive, 0, sizeof(Receive));
-	Receive.Data[0] = '\0';
-	Receive.Data_Count = 0;
-	
-	GSM_Receive_Data(&Receive);
-	// 去掉了首尾的\r\n，没有则不去掉
-	Receive.Data_Count = Remove_CR(Receive.Data, Receive.Data_Count);
 
-	if (strncmp((char*)Receive.Data, "STATE: TCP CLOSED\r\n\r\nCONNECT FAIL", strlen("STATE: TCP CLOSED\r\n\r\nCONNECT FAIL")) == 0) {
+//	memset(&Receive_Data, 0, sizeof(Receive_Data));
+	Receive_Data.Data[0] = '\0';
+	Receive_Data.Data_Count = 0;
+	
+
+	GSM_Receive_Data(&Receive_Data);
+	// 去掉了首尾的\r\n，没有则不去掉
+
+	Receive_Data.Data_Count = Remove_CR(Receive_Data.Data, Receive_Data.Data_Count);
+
+	if (strncmp((char*)Receive_Data.Data, "STATE: TCP CLOSED\r\n\r\nCONNECT FAIL", strlen("STATE: TCP CLOSED\r\n\r\nCONNECT FAIL")) == 0) {
 		return -1;
 	}
-	if (strncmp((char*)Receive.Data, "ALREADY CONNECT", strlen("ALREADY CONNECT")) == 0) {
+	if (strncmp((char*)Receive_Data.Data, "ALREADY CONNECT", strlen("ALREADY CONNECT")) == 0) {
 		return -2;
 	}
-	if (strncmp((char*)Receive.Data, "CONNECT OK", strlen("CONNECT OK")) == 0) {
+
+	if (strncmp((char*)Receive_Data.Data, "CONNECT OK", strlen("CONNECT OK")) == 0) {
 		return 1;
 	}
 	return 0;
@@ -172,14 +219,17 @@ int GSM_Receive_Data_Connect(void)
 
 bool GSM_Receive_Recall(char *waitstr)
 {
-//	memset(&Receive, 0, sizeof(Receive));
-	Receive.Data[0] = '\0';
-	Receive.Data_Count = 0;
+
+//	memset(&Receive_Data, 0, sizeof(Receive_Data));
+	Receive_Data.Data[0] = '\0';
+	Receive_Data.Data_Count = 0;
 	
-	GSM_Receive_Data(&Receive);
+
+	GSM_Receive_Data(&Receive_Data);
 	// 去掉了首尾的\r\n，没有则不去掉
-	Receive.Data_Count = Remove_CR(Receive.Data, Receive.Data_Count);
-	if (strncmp((char*)Receive.Data, waitstr, strlen(waitstr)) != 0) {
+
+	Receive_Data.Data_Count = Remove_CR(Receive_Data.Data, Receive_Data.Data_Count);
+	if (strncmp((char*)Receive_Data.Data, waitstr, strlen(waitstr)) != 0) {
 		return FALSE;
 	}
 	return TRUE;
