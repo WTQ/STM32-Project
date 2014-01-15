@@ -12,6 +12,7 @@
 #include "stm32f10x_tim.h"
 #include "ucos_ii.h"
 
+
 #include "gsm_core.h"
 
 void GSM_CommandTimeInit(void)
@@ -274,8 +275,8 @@ void GSM_USART_Rx(void)
 
 void GSM_Reset_Set(void)
 {
-	GPIO_SetBits(GPIOA, GPIO_Pin_8);
-	OSTimeDlyHMSM(0,0,2,0);	
+//	GPIO_SetBits(GPIOA, GPIO_Pin_8);
+//	OSTimeDlyHMSM(0,0,2,0);	
 	GPIO_ResetBits(GPIOA, GPIO_Pin_8);
 	OSTimeDlyHMSM(0,0,1,500);	
 	GPIO_SetBits(GPIOA, GPIO_Pin_8);
