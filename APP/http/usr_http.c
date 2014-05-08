@@ -43,20 +43,25 @@ void GSM_Get_Record(char *buffer)
 
 void GSM_Post_Record(char *Buffer, WM_Record *WMRecord)
 {
-	char WMTempData[100], strTemp[10];
+	char WMTempData[100], strTemp[10], str[13];
 	WMTempData[0] = '\0';
+
+	memcpy(str, WMRecord->WMData, 12);
+	str[12] = '\0';
+		
+	strcat(WMTempData, str);
+
 
 	post_data(WMTempData, "type","data");
 	
 	sprintf(strTemp, "%d", WMRecord->ID); 
 	post_data(WMTempData, "WMRecord_ID", strTemp);
 	
-	sprintf(strTemp, "%d", WMRecord->WMData_ID); 
-	post_data(WMTempData, "WMData_ID", strTemp);
-	
 	sprintf(strTemp, "%d", WMRecord->FrameNum);
-	post_data(WMTempData, "FrameNum", strTemp);
-
+	post_data(WMTempData, "FrameNum", strTemp);	
+	
+	post_data(WMTempData, "WMData", str);
+	
 	post_http(Buffer, WMTempData);
 }
 

@@ -63,19 +63,22 @@ bool SendPacketEnd(struct tcp_pcb *pcb)
 
 bool TCP_SendRecord(struct tcp_pcb *pcb, WM_Record *WMRecord)
 {
-	char WMTempData[50], strTemp[10];
+	char WMTempData[50], strTemp[10], str[13];
 	WMTempData[0] = '\0';
-	
+
+	memcpy(str, WMRecord->WMData, 12);
+	str[12] = '\0';
+
 	sprintf(strTemp, "%d", WMRecord->ID);
 	strcat(WMTempData, strTemp);
 	strcat(WMTempData, ",");
 	
-	sprintf(strTemp, "%d", WMRecord->WMData_ID);
-	strcat(WMTempData, strTemp);
-	strcat(WMTempData, ",");
-	
 	sprintf(strTemp, "%d", WMRecord->FrameNum);
-	strcat(WMTempData, strTemp);
+	strcat(WMTempData, strTemp);		
+	strcat(WMTempData, ",");	
+
+	strcat(WMTempData, str);
+
 	
 	return SendCharBuff(pcb, WMTempData, strlen(WMTempData), PT_TEXT);
 }

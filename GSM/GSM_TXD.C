@@ -470,21 +470,22 @@ void GSM_Send_CN_MSG2(unsigned char  *Target_phone,unsigned char  *Content)
 ¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~¨~*/
 void GPRS_CopyWMRecord(char* Buffer,WM_Record *WMRecord)
 {
-	char WMTempData[50], strTemp[10];
+	char WMTempData[50], strTemp[10], str[13];
 	WMTempData[0] = '\0';
+	memcpy(str, WMRecord->WMData, 12);
+	str[12] = '\0';
 	
 	sprintf(strTemp, "%d", WMRecord->ID);
 	strcat(WMTempData, strTemp);
 	strcat(WMTempData, ",");
 	
-	sprintf(strTemp, "%d", WMRecord->WMData_ID);
+	sprintf(strTemp, "%d", WMRecord->FrameNum);
 	strcat(WMTempData, strTemp);
 	strcat(WMTempData, ",");
-	
-	sprintf(strTemp, "%d", WMRecord->FrameNum);
-
-	strcat(WMTempData, strTemp);
+		
+	strcat(WMTempData, str);
 	strcat(WMTempData, "\r\n");
+	
 
 	strcat(Buffer, WMTempData);
 }

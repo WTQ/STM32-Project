@@ -57,11 +57,12 @@ void USART_SendStr(char *data, int32_t len)
 void USART_SendRecord(WM_Record *WMRecord)
 {
 	float fWMTime;
-	char WMTempData[45], strTemp[10];
+	char WMTempData[45], strTemp[10], str[13];
 	WMTempData[0] = '\0';
-	
-	sprintf(strTemp, "%d", WMRecord->WMData_ID);
-	strcat(WMTempData, strTemp);
+	memcpy(str, WMRecord->WMData, 12);
+	str[12] = '\0';
+		
+	strcat(WMTempData, str);
 	strcat(WMTempData, ",");
 	
 	fWMTime = WMRecord->FrameNum / 25;

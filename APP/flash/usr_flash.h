@@ -2,6 +2,7 @@
  * FLASH操作相关封装
  * 
  * @author 王特
+ * 修改 矫东航
  */
 
 #ifndef USR_FLASH_H
@@ -26,13 +27,13 @@
 // 记录标号长度
 #define RECORD_ID_MAX_LEN		4
 // 帧数长度
-#define FM_MAX_LEN				2
+#define FM_MAX_LEN				4
 // WM_Header长度
 #define WM_HEADER_LEN			(IDSTRING_MAX_LEN + 4)
 // WM_Data长度
 #define WM_DATA_LEN				(WMDATA_ID_MAX_LEN + WM_MAX_LEN)
 // WM_Record长度
-#define WM_RECORD_LEN			(RECORD_ID_MAX_LEN + WMDATA_ID_MAX_LEN + FM_MAX_LEN)
+#define WM_RECORD_LEN			(RECORD_ID_MAX_LEN + WM_MAX_LEN + FM_MAX_LEN)
 
 // 水印数据结构体地址, 10*2K
 #define WM_DATA_ADDR_START		((uint32_t)0x08036000)
@@ -58,8 +59,8 @@ typedef struct _WM_Data {
 // 匹配结果数据结构体
 typedef struct _WM_Record {
 	uint32_t ID;
-	uint16_t WMData_ID;
-	uint16_t FrameNum;
+	uint32_t FrameNum;
+	uint8_t *WMData;
 } WM_Record;
 
 // 保存位置的结构体
@@ -79,14 +80,14 @@ bool Usr_Flash_Erase(uint32_t Start_Address);
 // WM_Data相关的操作封装
 bool GetWMHeader(WM_Header * WMHeader);
 void SetWMHeader(void);
-bool GetWM(WM_Data *WMData, int32_t index);
+bool GetWM(WM_Data *WMData, int8_t index);
 bool WriteWM(WM_Data *WMData);
 bool EraseWM(void);
 
 // WM_Record相关操作封转
 bool GetRecordHeader(WM_Header * WMHeader);
 void SetRecordHeader(void);
-bool GetRecord(WM_Record *WMRecord, int32_t index);
+bool GetRecord(WM_Record *WMRecord, int8_t index);
 bool WriteRecord(WM_Record *WMRecord);
 bool EraseRecord(void);
 uint32_t GetRecordLastID(void);

@@ -14,12 +14,16 @@
 
 // 相关全局变量
 Message_Data MessageData;
-WM_Array Array_Data[WM_GROUP_NUM];
 uint8_t DSPState = DSP_STOPPING;
 WM_Record g_WMRecord;
-int FrameNum;	//帧数组伪控制器，判定队列里的有效帧数
-int flag;	// 看门狗功能，判断水印连续性
 extern struct tcp_pcb *gPcb;
+
+uint8_t Freven[12] = {0}, Frodd[12] = {0}; // 进入的两帧数据
+uint8_t FrA[WM_GROUP_NUM][12] = {0}, FrB[WM_GROUP_NUM][12] = {0}; // 判断水印有无的缓冲区
+//uint8_t FrA_r[12] = {0}, FrB_r[12] = {0}; // 临时结果存储区
+int N_WM = 0, N_NO = 0, N_EX = 0, N_PART = 0; // 控制变量计数器
+int FrSum[96] = {0}; // 水印累加和器（必须用双极性水印进行累加，否则会因N_NO的那数据部分丢失而出错）
+uint8_t Frsgn[12] = {0}; // 似然水印（0或1）
 
 void DSP_Init(void)
 {
@@ -28,10 +32,8 @@ void DSP_Init(void)
 	MessageData.Command = M_CMD_UNDEFNIE;
 	MessageData.rDataLen = 0;
 	MessageData.sTime = 0;	
-	g_WMRecord.WMData_ID = 0;
 	g_WMRecord.FrameNum = 0;
-	FrameNum = 0;
-	flag = 0;
+
 	
 	// 设置PA5管脚为高电平，LED灯灭
 	GPIO_SetBits(GPIOA, GPIO_Pin_5);
@@ -59,8 +61,7 @@ void DSP_Stop(void)
 void DSP_ReseveMsg(void)
 {
 	uint8_t temp;
-	WM_Array MessageTemp = {0};
-	
+
 	if(USART_GetFlagStatus(USART3, USART_FLAG_RXNE) == RESET) {
 		return;
 	}
@@ -75,13 +76,13 @@ void DSP_ReseveMsg(void)
 		return;
 	}
 	
-	if(MessageData.rDataLen > 12) {							  // 如果？数据大于12
+	if(MessageData.rDataLen > 24) {							  // 如果？数据大于24
 		MessageData.rDataLen = 1;
 		MessageData.TransState = TRANS_ING;
 		MessageData.HandleState = HANDLE_IDLE;
 	}
 	
-	if(MessageData.rDataLen == 12) {						  // 如果接收到的字节数等于12
+	if(MessageData.rDataLen == 24) {						  // 如果接收到的字节数等于24
 		MessageData.TransState = TRANS_OK;
 		MessageData.HandleState = HANDLE_READY;
 	}
@@ -94,63 +95,114 @@ void DSP_ReseveMsg(void)
 		if(WMFlag.WM_Data_Num <= 0) {
 			return;
 		}
-		memcpy((void *) MessageTemp.Data, (void *) MessageData.Data, 12);
-		Push_Data(MessageTemp);
-		if(FrameNum < WM_GROUP_NUM)
-			return;
-		else
-			PreHandle();		
-	}
-	return;
-}
+			
+		memcpy((uint8_t *) Freven, (uint8_t *) MessageData.Data, 12);
+		memcpy((uint8_t *) Frodd, (uint8_t *) (MessageData.Data + 12), 12);
 
-//单帧水印数据压入待处理队列
-void Push_Data(WM_Array MessageTemp)
-{
-	int i = 0;
-	if(flag < FRAME_FLAG)
-		flag++;
-	if((flag == FRAME_FLAG) && (g_WMRecord.FrameNum > 0)) {
-		WriteRecord(&g_WMRecord);
-		USART_SendRecord(&g_WMRecord);
-		TCP_SendRecord(gPcb, &g_WMRecord);	
-		g_WMRecord.WMData_ID = 0;
-		g_WMRecord.FrameNum = 0;
-	} 
-
-	if(FrameNum < WM_GROUP_NUM)
-	{
-		FrameNum++;
-		Array_Data[FrameNum-1] = MessageTemp;
-	}
-	else
-	{
-		for(i = 0; i < FrameNum - 1; i++)
-		{
-			Array_Data[i] = Array_Data[i+1];
-		}
-		Array_Data[i] = MessageTemp;
+		PreHandle();
 	}
 }
 
 //判定水印是否存在的预判决
 void PreHandle(void)
 {
-	int i = 0, j = 0, num = 0;
+	int j;
 	uint8_t temp[12] = {0};
-	for(i = 0; i < FrameNum; i += 2)
-	{
-		for(j = 0; j < 12; j++)
-		{
-			temp[j] = ~(Array_Data[i].Data[j] ^ Array_Data[i+1].Data[j]);
-		}
-		num = Find_Str(temp,12);
-		if(num > WM_AND_MIN)
-			return;
+
+	for (j = 0; j < 12; j++) {
+		temp[j] = ~(Freven[j] ^ Frodd[j]);
 	}
-	Handle_Water();		//开始处理
+	
+	if (Find_Str(temp,12) > WM_AND_MIN) {	
+		WriteHandle();	// 之前信息写入Flash并重置计数器
+		return;
+	}
+
+	// 2帧放入循环队列里
+	memcpy((uint8_t *) (FrA + (N_PART % WM_GROUP_NUM) * 12), (uint8_t *) Freven, 12);
+	memcpy((uint8_t *) (FrB + (N_PART % WM_GROUP_NUM) * 12), (uint8_t *) Frodd, 12);
+	N_PART++;
+	if (N_PART < WM_GROUP_NUM) {
+		return;
+	}
+	
+	Handle_Water(); // 循环队列已满，开始处理
 }
 
+// 处理DSP传过来的水印数据
+void Handle_Water(void)
+{
+	uint8_t i, j, k;
+	
+	if (mode(FrA, FrB, WM_GROUP_NUM) > WM_FINAL_MIN) {
+		if (N_WM == 0) {
+			N_EX = 0;
+			return;
+		} else {
+			N_NO++;
+			if (N_NO < WM_GROUP_NUM) {
+				return;
+			} else {
+				WriteHandle();	// N_WM有水印的前提下，连续WM_GROUP_NUM帧没水印了
+			}
+		}
+	} else {
+		if (N_NO == 0) {
+			if (N_WM == 0) {
+				if (N_EX == WM_GROUP_NUM) {
+					N_WM = N_EX;
+					for (j = 0; j < WM_GROUP_NUM; j++) {
+						for (i = 0; i < 12; i++) {
+							for (k = 0; k < 8; k++) {		
+								FrSum[i*8+k] += 
+									(((FrA[j][i] >> k) & 1) << 1) - 1 
+									+ (((FrB[j][i] >> k) & 1) << 1) - 1;
+							}
+						}
+					}
+				} else { // 不到WM_GROUP_NUM帧（只能小于不可能大于，不信你试试）
+					N_EX++;
+				}
+			} else {
+				N_WM++;
+				N_EX++;
+				for (i = 0; i < 12; i++) {
+					for (k = 0; k < 8; k++) {		
+						FrSum[i*8+k] += 
+						(((Freven[i] >> k) & 1) << 1) - 1 
+						+ (((Frodd[i] >> k) & 1) << 1) - 1;
+					}
+				}
+			}
+		} else {
+			N_WM += N_NO;
+			N_NO = 0;
+		}
+	}
+
+}
+
+// 将似然水印和帧数写入Flash并重置计数器
+void WriteHandle(void)
+{
+	int i, k;
+	if (N_WM > WM_FRAME_MIN) {
+		for (i = 0; i < 12; i++) {
+			Frsgn[i] = 0;
+			for (k = 0; k < 8; k++) {		
+				Frsgn[i] += ((FrSum[i*8+k] >= 0) ? 1 : 0) << k;
+			}
+		}
+		// @todo 帧数N_WM和似然水印Frsgn写入Flash
+	
+	}
+	N_WM = 0;
+	N_NO = 0;
+	N_EX = 0;
+	N_PART = 0;
+}
+
+/*
 // 处理水印DSP传过来的水印数据
 void Handle_Water(void)
 {
@@ -177,7 +229,7 @@ void Handle_Water(void)
 				temp2[j] = (Array_Data[k+1].Data[j] ^ t_WMData.WaterMark[j]);					// 按位异或
 			}
 			num = Find_Str(temp1, 12) + Find_Str(temp2, 12);
-			if(num >= /*nMaxSim1*/Array_Data[k].Right_Num) {
+			if(num >= Array_Data[k].Right_Num) {	//nMaxSim1
 				//nMaxSim1 = num;
 				//t_WMRecord1.WMData_ID = t_WMData.ID;
 				Array_Data[k].Right_Num = num;
@@ -250,26 +302,92 @@ void DSP_Water_Handle(__IO uint32_t localtime)
 {
 	// 执行任务时间
 	static uint32_t DSP_Handle_Timer = 0;
-/*	if (localtime - DSP_Handle_Timer >= DSP_TMR_INTERVAL)
-	{
-		DSP_Handle_Timer = localtime;
-		
-		// 空闲200多帧的样子写入缓冲的记录
-		if(MessageData.HandleState == HANDLE_OK) {
-			++MessageData.sTime;
-			if(MessageData.sTime > 130 && g_WMRecord.FrameNum > 0) {
-				WriteRecord(&g_WMRecord);
-				USART_SendRecord(&g_WMRecord);
-				TCP_SendRecord(gPcb, &g_WMRecord);
-				MessageData.sTime = 0;
-				MessageData.HandleState = HANDLE_IDLE;
-				
-				g_WMRecord.WMData_ID = 0;
-				g_WMRecord.FrameNum = 0;
+//	if (localtime - DSP_Handle_Timer >= DSP_TMR_INTERVAL)
+//	{
+//		DSP_Handle_Timer = localtime;
+//		
+//		// 空闲200多帧的样子写入缓冲的记录
+//		if(MessageData.HandleState == HANDLE_OK) {
+//			++MessageData.sTime;
+//			if(MessageData.sTime > 130 && g_WMRecord.FrameNum > 0) {
+//				WriteRecord(&g_WMRecord);
+//				USART_SendRecord(&g_WMRecord);
+//				TCP_SendRecord(gPcb, &g_WMRecord);
+//				MessageData.sTime = 0;
+//				MessageData.HandleState = HANDLE_IDLE;
+//				
+//				g_WMRecord.WMData_ID = 0;
+//				g_WMRecord.FrameNum = 0;
+//			}
+//		}
+//	}
+
+}
+
+
+// output必须为至少24字节的缓冲空间，否则溢出
+void ZhongArr(uint8_t *output1, uint8_t *output2)
+{
+	int odd = 0;
+	unsigned char temp;
+	unsigned char zhong = 0;
+	int i, j, k;
+	for(i = 0; i < 24; ++i) {
+		for(j = 0; j < 8; ++j) {
+			for(k = 0; k < WM_GROUP_NUM; k++) {
+				if(i < 12) {
+					// 2k的判断
+					temp = Array_Data[2*k].Data[i] >> j;
+				} else {
+					// 2k+1的判断
+					temp = Array_Data[2*k + 1].Data[i%12] >> j;
+				}
+				if(temp % 2 != 0) {
+					++odd;
+				}
+			}
+			// 一位的计算结果，在j位取1
+			if(odd > WM_GROUP_NUM/2) {
+				zhong += (1 << j);
+			}
+			odd = 0;
+		}
+		// 一个字节的计算结果
+		if(i<12) {
+			output1[i] = zhong;
+		}
+		else {
+			output2[i%12] = zhong;
+		}
+		zhong = 0;
+	}
+}
+*/
+
+// 可同时计算两个12字节水印的众数值
+int mode(uint8_t FrA[][12], uint8_t FrB[][12], uint8_t n)
+{
+	uint8_t i, j, k;
+	int sumA, sumB;
+	int total = 0;
+	for (i = 0; i < 12; i++) {
+//		FA_r[i] = 0;
+//		FB_r[i] = 0;
+		for (k = 0; k < 8; k++) {
+			sumA = 0;
+			sumB = 0;
+			for (j = 0; j < n; j++) {
+				sumA += (((FrA[j][i] >> k) & 1) << 1) - 1;
+				sumB += (((FrB[j][i] >> k) & 1) << 1) - 1;
+			}
+//			FA_r[i] += ((sumA >= 0) ? 1 : 0) << k;
+//			FB_r[i] += ((sumB >= 0) ? 1 : 0) << k;
+			if ((sumA >= 0) == (sumB >= 0)) {
+				total += 1;
 			}
 		}
 	}
-*/
+	return total;
 }
 
 int8_t Find_One(uint8_t n) 						//计算1的个数
@@ -289,41 +407,4 @@ int8_t Find_Str(uint8_t *str, int8_t num)
 		count += Find_One((uint8_t)str[i]);
 	}
 	return count;
-}
-// output必须为至少24字节的缓冲空间，否则溢出
-void ZhongArr(uint8_t *output1, uint8_t *output2)
-{
-	int odd = 0;
-	unsigned char temp;
-	unsigned char zhong = 0;
-	int i, j, k;
-	for(i = 0; i < 24; ++i) {
-		for(j = 0; j < 8; ++j) {
-			for(k = 0; k < WM_GROUP_NUM/2; k++) {
-				if(i < 12) {
-					// 2k的判断
-					temp = Array_Data[2*k].Data[i] >> j;
-				} else {
-					// 2k+1的判断
-					temp = Array_Data[2*k + 1].Data[i%12] >> j;
-				}
-				if(temp % 2 != 0) {
-					++odd;
-				}
-			}
-			// 一位的计算结果，在j位取1
-			if(odd > WM_GROUP_NUM/4) {
-				zhong += (1 << j);
-			}
-			odd = 0;
-		}
-		// 一个字节的计算结果
-		if(i<12) {
-			output1[i] = zhong;
-		}
-		else {
-			output2[i%12] = zhong;
-		}
-		zhong = 0;
-	}
 }
