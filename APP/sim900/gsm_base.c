@@ -78,6 +78,9 @@ int GSM_AT_Recall_Connect(char *data)
 		return FALSE;
 	}
 	// 上面函数已经去掉了首尾的\r\n，这里不用重复删除了
+	if (strncmp((char*)Receive_AT.Data, "OK\r\n\r\nCONNECT OK", strlen("OK\r\n\r\nCONNECT OK")) == 0) {
+		return 2;
+	}
 
 	if (strncmp((char*)Receive_AT.Data, "OK", strlen("OK")) == 0) {
 		return 1;

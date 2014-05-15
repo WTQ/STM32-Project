@@ -202,7 +202,7 @@ void USART3_IRQHandler(void)
 {
 	OSIntEnter();
 	DSP_ReseveMsg();
-	Handle_Water();
+	//Handle_Water();
 	OSIntExit();
 }
 

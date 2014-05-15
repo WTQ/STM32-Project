@@ -172,7 +172,7 @@ bool WriteRecord(WM_Record *WMRecord)
 	
 	Usr_Flash_Write(WMFlag.WM_Record_Address, (uint8_t *)&WMRecord->ID, RECORD_ID_MAX_LEN);
 	Usr_Flash_Write(WMFlag.WM_Record_Address + RECORD_ID_MAX_LEN, (uint8_t *)&WMRecord->FrameNum, FM_MAX_LEN);
-	Usr_Flash_Write(WMFlag.WM_Record_Address + RECORD_ID_MAX_LEN + FM_MAX_LEN, (uint8_t *)&WMRecord->WMData, WM_MAX_LEN);
+	Usr_Flash_Write(WMFlag.WM_Record_Address + RECORD_ID_MAX_LEN + FM_MAX_LEN, (uint8_t *)WMRecord->WMData, WM_MAX_LEN);
 	
 	// 更新WMFlag标志
 	WMFlag.WM_Record_Address += WM_RECORD_LEN;

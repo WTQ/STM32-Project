@@ -32,7 +32,7 @@
 #define WM_GROUP_NUM	13
 
 // 水印预判决的阀值	控制预判决灵敏度（越高，则虚警率越高，漏检率越低，经验值70）
-#define WM_AND_MIN		75
+#define WM_AND_MIN		80
 
 // 水印众数判决的阈值 控制判决灵敏度（越高，则虚警率越低，漏检率越高，26帧经验值55）
 #define WM_FINAL_MIN	55
@@ -40,11 +40,22 @@
 // 水印连续存在帧数阈值
 #define WM_FRAME_MIN	100
 
+// 水印连续不存在帧数阈值
+#define WM_FRAME_NONE	100 // 初步定1000，调试用100
+
 // 水印匹配的时间间隔，单位：ms
 // #define DSP_TMR_INTERVAL	100
 
 // 计算帧数的乘数
 #define DSP_FRAME_MUL		WM_GROUP_NUM
+
+// 启动DSP处理task的信号量
+extern uint8_t DSP_FLAG;
+// DSP让出task的信号量
+extern uint8_t DSP_WMFINISH_FLAG;
+
+// 似然水印（0或1）
+extern uint8_t Frsgn[12]; 
 
 // 水印传输的状态
 typedef enum {
@@ -87,7 +98,7 @@ void DSP_Water_Handle(__IO uint32_t localtime);
 void PreHandle(void);
 void ZhongArr(uint8_t *, uint8_t *);
 void WriteHandle(void);
-int mode(uint8_t [][12], uint8_t [][12], uint8_t);
+int mode_same(uint8_t [][12], uint8_t [][12], uint8_t);
 
 // 找出字符串中1的个数
 int8_t Find_One(uint8_t n);

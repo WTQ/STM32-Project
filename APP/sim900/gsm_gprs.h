@@ -12,7 +12,7 @@
 #include "gsm_base.h"
 
 // GSM初始化
-void GSM_Config(void);
+bool GSM_Config(void);
 // GPRS初始化
 void GPRS_Init(void);
 // TCP连接并阻塞等待成功消息

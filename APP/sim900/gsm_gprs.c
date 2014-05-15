@@ -10,14 +10,18 @@
 
 extern GSM_RECEIVE_RECORD Receive_AT;
 
-void GSM_Config(void)
+bool GSM_Config(void)
 {
 	// 测试命令
-	GSM_AT_Recall("AT\r\n", "OK");
+	if (!GSM_AT_Recall("AT\r\n", "OK")) {
+		return FALSE;
+	}
 			
 	// 设置模块的字符集
-	GSM_AT_Recall("AT+CSCS=\"GSM\"\r\n", "OK");
-	
+	if (!GSM_AT_Recall("AT+CSCS=\"GSM\"\r\n", "OK")) {
+		return FALSE;
+	}
+	return TRUE;
 }
 
 void GPRS_Init(void)
@@ -44,6 +48,7 @@ bool GPRS_TCP_Connect(char *IP, char *PORT)
 {
 	int connect_state = 0;
 	int AT_state = 0;
+	int count = 0;
 	char TCP_str[50] = "AT+CIPSTART=\"TCP\",\"";
 	strcat(TCP_str, IP);
 	strcat(TCP_str, "\",");
@@ -54,12 +59,17 @@ bool GPRS_TCP_Connect(char *IP, char *PORT)
 	while (connect_state != 1) { 
 		
 		// 阻塞等待建立TCP连接
-		while ((AT_state != 1) && (AT_state != -2)) {
-			OSTimeDlyHMSM(0,0,2,0);
-			AT_state = GSM_AT_Recall_Connect(TCP_str);			
+		while ((AT_state != 2) && (AT_state != 1)&& (AT_state != -2)) {
+			if (count == 10) {
+				return FALSE;
+			}
+			OSTimeDlyHMSM(0,0,3,0);
+			AT_state = GSM_AT_Recall_Connect(TCP_str);
+			count++;			
 		}
-		connect_state = GSM_Receive_Data_Connect();
-		connect_state = connect_state;
+		if (AT_state != 2) {
+			connect_state = GSM_Receive_Data_Connect();
+		}
 	}
 	return TRUE;
 }

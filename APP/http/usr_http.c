@@ -49,7 +49,7 @@ void GSM_Post_Record(char *Buffer, WM_Record *WMRecord)
 	memcpy(str, WMRecord->WMData, 12);
 	str[12] = '\0';
 		
-	strcat(WMTempData, str);
+//	strcat(WMTempData, str);
 
 
 	post_data(WMTempData, "type","data");

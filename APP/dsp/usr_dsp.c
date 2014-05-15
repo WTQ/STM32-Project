@@ -3,6 +3,8 @@
  *
  * @author 王特
  * @修改   矫东航
+ *
+ * @ todo SIM900发送水印信息是可以关掉中断，但要及时开启
  */
 
 #include <stdlib.h>
@@ -18,12 +20,23 @@ uint8_t DSPState = DSP_STOPPING;
 WM_Record g_WMRecord;
 extern struct tcp_pcb *gPcb;
 
+// 启动DSP处理task的信号量
+uint8_t DSP_FLAG;
+
+// DSP让出task的信号量
+uint8_t DSP_WMFINISH_FLAG;
+
 uint8_t Freven[12] = {0}, Frodd[12] = {0}; // 进入的两帧数据
 uint8_t FrA[WM_GROUP_NUM][12] = {0}, FrB[WM_GROUP_NUM][12] = {0}; // 判断水印有无的缓冲区
 //uint8_t FrA_r[12] = {0}, FrB_r[12] = {0}; // 临时结果存储区
-int N_WM = 0, N_NO = 0, N_EX = 0, N_PART = 0; // 控制变量计数器
-int FrSum[96] = {0}; // 水印累加和器（必须用双极性水印进行累加，否则会因N_NO的那数据部分丢失而出错）
-uint8_t Frsgn[12] = {0}; // 似然水印（0或1）
+int N_WM = 0; 			// 水印帧数计数器
+int N_NO = 0; 			// 连续无水印短计数器
+int N_EX = 0; 			// 连续有水印短计数器
+int N_PART = 0; 		// 缓冲区是否处理计数器
+int WM_NONE = 0; 		// 连续无水印长计数器
+int FrSum[96] = {0}; 		// 水印累加和器（必须用双极性水印进行累加，否则会因N_NO的那数据部分丢失而出错）
+uint8_t Frsgn[12] = {0}; 	// 似然水印（0或1）
+int KK = 0;
 
 void DSP_Init(void)
 {
@@ -33,7 +46,8 @@ void DSP_Init(void)
 	MessageData.rDataLen = 0;
 	MessageData.sTime = 0;	
 	g_WMRecord.FrameNum = 0;
-
+	DSP_FLAG = 0;
+	DSP_WMFINISH_FLAG = 0;
 	
 	// 设置PA5管脚为高电平，LED灯灭
 	GPIO_SetBits(GPIOA, GPIO_Pin_5);
@@ -63,6 +77,7 @@ void DSP_ReseveMsg(void)
 	uint8_t temp;
 
 	if(USART_GetFlagStatus(USART3, USART_FLAG_RXNE) == RESET) {
+		temp = 0;
 		return;
 	}
 	temp = USART_ReceiveData(USART3);	                      // 接收串口数据1byte
@@ -92,9 +107,9 @@ void DSP_ReseveMsg(void)
 	if(MessageData.TransState == TRANS_OK && MessageData.HandleState == HANDLE_READY) {		// 如果传输结束并且准备处理
 		MessageData.HandleState = HANDLE_OK;
 		MessageData.sTime = 0;
-		if(WMFlag.WM_Data_Num <= 0) {
-			return;
-		}
+//		if(WMFlag.WM_Data_Num <= 0) {
+//			return;
+//		}
 			
 		memcpy((uint8_t *) Freven, (uint8_t *) MessageData.Data, 12);
 		memcpy((uint8_t *) Frodd, (uint8_t *) (MessageData.Data + 12), 12);
@@ -106,27 +121,41 @@ void DSP_ReseveMsg(void)
 //判定水印是否存在的预判决
 void PreHandle(void)
 {
+	
 	int j;
 	uint8_t temp[12] = {0};
-
+	
+	// 判断水印是否连续不存在，若不存在则中断判断水印程序，启动SIM900发送水印程序
+	if (N_WM >= 100) {
+		WM_NONE = 0;
+	} else {
+		if (DSP_WMFINISH_FLAG == 0) {
+			WM_NONE++;
+		}
+	}
+	if (WM_NONE >= WM_FRAME_NONE) {
+		DSP_WMFINISH_FLAG = 1;
+		WM_NONE = 0;
+	}
+	
 	for (j = 0; j < 12; j++) {
 		temp[j] = ~(Freven[j] ^ Frodd[j]);
 	}
-	
+
 	if (Find_Str(temp,12) > WM_AND_MIN) {	
 		WriteHandle();	// 之前信息写入Flash并重置计数器
 		return;
 	}
 
 	// 2帧放入循环队列里
-	memcpy((uint8_t *) (FrA + (N_PART % WM_GROUP_NUM) * 12), (uint8_t *) Freven, 12);
-	memcpy((uint8_t *) (FrB + (N_PART % WM_GROUP_NUM) * 12), (uint8_t *) Frodd, 12);
+	memcpy((uint8_t *) (*FrA + (N_PART % WM_GROUP_NUM) * 12), (uint8_t *) Freven, 12);
+	memcpy((uint8_t *) (*FrB + (N_PART % WM_GROUP_NUM) * 12), (uint8_t *) Frodd, 12);
 	N_PART++;
 	if (N_PART < WM_GROUP_NUM) {
 		return;
 	}
 	
-	Handle_Water(); // 循环队列已满，开始处理
+	DSP_FLAG = 1;
 }
 
 // 处理DSP传过来的水印数据
@@ -134,7 +163,8 @@ void Handle_Water(void)
 {
 	uint8_t i, j, k;
 	
-	if (mode(FrA, FrB, WM_GROUP_NUM) > WM_FINAL_MIN) {
+	DSP_FLAG = 0; // 标志位置零
+	if (mode_same(FrA, FrB, WM_GROUP_NUM) > WM_FINAL_MIN) {
 		if (N_WM == 0) {
 			N_EX = 0;
 			return;
@@ -151,12 +181,13 @@ void Handle_Water(void)
 			if (N_WM == 0) {
 				if (N_EX == WM_GROUP_NUM) {
 					N_WM = N_EX;
-					for (j = 0; j < WM_GROUP_NUM; j++) {
-						for (i = 0; i < 12; i++) {
-							for (k = 0; k < 8; k++) {		
+					for (i = 0; i < 12; i++) {
+						for (k = 0; k < 8; k++) {	
+							FrSum[i*8+k] = 0;
+							for (j = 0; j < WM_GROUP_NUM; j++) {	
 								FrSum[i*8+k] += 
-									(((FrA[j][i] >> k) & 1) << 1) - 1 
-									+ (((FrB[j][i] >> k) & 1) << 1) - 1;
+									(((FrA[j][i] >> k) & 1) << 1) 
+									- (((FrB[j][i] >> k) & 1) << 1);
 							}
 						}
 					}
@@ -169,8 +200,8 @@ void Handle_Water(void)
 				for (i = 0; i < 12; i++) {
 					for (k = 0; k < 8; k++) {		
 						FrSum[i*8+k] += 
-						(((Freven[i] >> k) & 1) << 1) - 1 
-						+ (((Frodd[i] >> k) & 1) << 1) - 1;
+						(((Freven[i] >> k) & 1) << 1) 
+						- (((Frodd[i] >> k) & 1) << 1);
 					}
 				}
 			}
@@ -190,11 +221,15 @@ void WriteHandle(void)
 		for (i = 0; i < 12; i++) {
 			Frsgn[i] = 0;
 			for (k = 0; k < 8; k++) {		
-				Frsgn[i] += ((FrSum[i*8+k] >= 0) ? 1 : 0) << k;
+				Frsgn[i] += (uint8_t)(((FrSum[i*8+k] >= 0) ? 1 : 0)) << k;
 			}
 		}
-		// @todo 帧数N_WM和似然水印Frsgn写入Flash
-	
+		// 帧数N_WM和似然水印Frsgn写入Flash
+		g_WMRecord.WMData = Frsgn;
+		g_WMRecord.FrameNum = N_WM * 2;
+		WriteRecord(&g_WMRecord);
+		USART_SendRecord(&g_WMRecord);
+		TCP_SendRecord(gPcb, &g_WMRecord);
 	}
 	N_WM = 0;
 	N_NO = 0;
@@ -365,7 +400,7 @@ void ZhongArr(uint8_t *output1, uint8_t *output2)
 */
 
 // 可同时计算两个12字节水印的众数值
-int mode(uint8_t FrA[][12], uint8_t FrB[][12], uint8_t n)
+int mode_same(uint8_t FrA[][12], uint8_t FrB[][12], uint8_t n)
 {
 	uint8_t i, j, k;
 	int sumA, sumB;
