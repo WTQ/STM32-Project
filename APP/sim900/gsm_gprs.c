@@ -69,6 +69,7 @@ bool GPRS_TCP_Connect(char *IP, char *PORT)
 		}
 		if (AT_state != 2) {
 			connect_state = GSM_Receive_Data_Connect();
+			connect_state = connect_state; // ≤‚ ‘”Ôæ‰
 		}
 	}
 	return TRUE;

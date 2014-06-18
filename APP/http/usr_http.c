@@ -43,11 +43,13 @@ void GSM_Get_Record(char *buffer)
 
 void GSM_Post_Record(char *Buffer, WM_Record *WMRecord)
 {
-	char WMTempData[100], strTemp[10], str[13];
+	char WMTempData[100], strTemp[10], str[25];
+	int i = 0;
 	WMTempData[0] = '\0';
-
-	memcpy(str, WMRecord->WMData, 12);
-	str[12] = '\0';
+	for (i = 0; i < 12; i ++) {
+		sprintf(str + i * 2 , "%x", WMRecord->WMData[i]);
+	}
+	str[24] = '\0';
 		
 //	strcat(WMTempData, str);
 

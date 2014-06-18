@@ -57,10 +57,13 @@ void USART_SendStr(char *data, int32_t len)
 void USART_SendRecord(WM_Record *WMRecord)
 {
 	float fWMTime;
-	char WMTempData[45], strTemp[10], str[13];
+	char WMTempData[45], strTemp[10], str[25];
+	int i = 0;
 	WMTempData[0] = '\0';
-	memcpy(str, WMRecord->WMData, 12);
-	str[12] = '\0';
+	for (i = 0; i < 12; i ++) {
+		sprintf(str + i * 2 , "%x", WMRecord->WMData[i]);
+	}
+	str[24] = '\0';
 		
 	strcat(WMTempData, str);
 	strcat(WMTempData, ",");

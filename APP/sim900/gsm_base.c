@@ -174,6 +174,7 @@ int GSM_Receive_Data_Connect(void)
 	if (strncmp((char*)Receive_Data.Data, "STATE: TCP CLOSED\r\n\r\nCONNECT FAIL", strlen("STATE: TCP CLOSED\r\n\r\nCONNECT FAIL")) == 0) {
 		return -1;
 	}
+
 	if (strncmp((char*)Receive_Data.Data, "ALREADY CONNECT", strlen("ALREADY CONNECT")) == 0) {
 		return -2;
 	}
