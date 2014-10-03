@@ -16,6 +16,7 @@ extern GSM_COMMAND_RECORD GSM_Command_Record;
 extern GSM_DATA_RECORD GSM_Data_Record;
 GSM_RECEIVE_RECORD Receive_AT;
 GSM_RECEIVE_RECORD Receive_Data;
+GPRS_TIME GPRS_Timer;
 
 bool GSM_AT_Only(char *data)
 {	
@@ -171,7 +172,11 @@ int GSM_Receive_Data_Connect(void)
 
 	Receive_Data.Data_Count = Remove_CR(Receive_Data.Data, Receive_Data.Data_Count);
 
-	if (strncmp((char*)Receive_Data.Data, "STATE: TCP CLOSED\r\n\r\nCONNECT FAIL", strlen("STATE: TCP CLOSED\r\n\r\nCONNECT FAIL")) == 0) {
+//	if (strncmp((char*)Receive_Data.Data, "STATE: TCP CLOSED\r\n\r\nCONNECT FAIL", strlen("STATE: TCP CLOSED\r\n\r\nCONNECT FAIL")) == 0) {
+//		return -1;
+//	}
+	
+	if (strncmp((char*)Receive_Data.Data, "STATE: TCP CLOSED", strlen("STATE: TCP CLOSED")) == 0) {
 		return -1;
 	}
 

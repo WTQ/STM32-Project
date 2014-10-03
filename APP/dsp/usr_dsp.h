@@ -41,16 +41,19 @@
 #define WM_FRAME_MIN	100
 
 // 水印连续不存在帧数阈值
-#define WM_FRAME_NONE	100 // 初步定1000，调试用100
+#define WM_FRAME_NONE	1000 // 初步定1000，调试用100
 
 // 水印匹配的时间间隔，单位：ms
 // #define DSP_TMR_INTERVAL	100
+
+// 停止水印接收并处理SIM900发送数据时间(/分钟)
+#define WM_SEND_TIME	10
 
 // 计算帧数的乘数
 #define DSP_FRAME_MUL		WM_GROUP_NUM
 
 // 启动DSP处理task的信号量
-extern uint8_t DSP_FLAG;
+//extern uint8_t DSP_FLAG;
 // DSP让出task的信号量
 extern uint8_t DSP_WMFINISH_FLAG;
 

@@ -54,9 +54,9 @@ void GSM_Handle(void)
 				sprintf(netBuffer, "stopped,%d,%d", WMFlag.WM_Record_Address - WM_RECORD_ADDR_START, WM_RECORD_ADDR_LEN);
 			}
 
-			strcat(Buffer,"Post / HTTP/1.1\r\nHost: 202.204.81.57\r\n\r\nRecord=");
+			strcat(Buffer,"Post / HTTP/1.1\r\nHost: 50.116.10.26\r\n\r\nRecord=");
 			strcat(Buffer,netBuffer);
-			GSM_GPRS_TCP_Connect("202.204.81.57","80");
+			GSM_GPRS_TCP_Connect("50.116.10.26","80");
 			GSM_GPRS_SEND(Buffer);
 			strcpy(Buffer,"\0");
 
@@ -65,13 +65,13 @@ void GSM_Handle(void)
 			lastRecordID = atoi(data + strlen("/updrecord") + 1);
 			i = GetRecordIndexById(lastRecordID + 1);
 			if(i != -1) {
-			strcat(Buffer,"Post / HTTP/1.1\r\nHost: 202.204.81.57\r\n\r\nRecord=");				
+			strcat(Buffer,"Post / HTTP/1.1\r\nHost: 50.116.10.26\r\n\r\nRecord=");				
 				while(i < WMFlag.WM_Record_Num) {
 					GetRecord(&WMRecord, i);
 					GPRS_CopyWMRecord(Buffer,&WMRecord);
 					++i;
 				}
-			GSM_GPRS_TCP_Connect("202.204.81.57","80");
+			GSM_GPRS_TCP_Connect("50.116.10.26","80");
 			GSM_GPRS_SEND(Buffer);
 			strcpy(Buffer, "\0");	
 			}
@@ -81,13 +81,13 @@ void GSM_Handle(void)
 			EraseRecord();
 		} else if(strmycmp(data, "/wmdata", strlen("/wmdata")) == 0) {
 			CMT.Content[0]=0;
-		 strcat(Buffer,"Post / HTTP/1.1\r\nHost: 202.204.81.57\r\n\r\nRecord=");
+		 strcat(Buffer,"Post / HTTP/1.1\r\nHost: 50.116.10.26\r\n\r\nRecord=");
 			for(i = 0; i < WMFlag.WM_Data_Num; ++i) {
 				GetWM(&WMData, i);
 				GPRS_CopyWMData(Buffer,&WMData);
 			}
 
-			GSM_GPRS_TCP_Connect("202.204.81.57","80");
+			GSM_GPRS_TCP_Connect("50.116.10.26","80");
 			GSM_GPRS_SEND(Buffer);
 			strcpy(Buffer, "\0");
 
@@ -98,9 +98,9 @@ void GSM_Handle(void)
 			CMT.Content[0]=0;
 			EraseWM();
 		} else {
-//			strcat(Buffer,"Post / HTTP/1.1\r\nHost: 202.204.81.57\r\n\r\nRecord=");
+//			strcat(Buffer,"Post / HTTP/1.1\r\nHost: 50.116.10.26\r\n\r\nRecord=");
 //			strcat(Buffer, "This is a string for test.\r\n");
-//		 	GSM_GPRS_TCP_Connect("202.204.81.57","80");
+//		 	GSM_GPRS_TCP_Connect("50.116.10.26","80");
 //			GSM_GPRS_SEND(Buffer);
 			// Á¬½Ó²âÊÔÓÃ
 			// SendPacketEnd(pcb);

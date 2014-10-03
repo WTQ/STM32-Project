@@ -9,6 +9,7 @@
 #include <string.h>
 
 extern GSM_RECEIVE_RECORD Receive_AT;
+extern GSM_RECEIVE_RECORD GPRS_Timer;
 
 bool GSM_Config(void)
 {
@@ -70,6 +71,38 @@ bool GPRS_TCP_Connect(char *IP, char *PORT)
 		if (AT_state != 2) {
 			connect_state = GSM_Receive_Data_Connect();
 			connect_state = connect_state; // 测试语句
+		}
+	}
+	return TRUE;
+}
+
+bool GPRS_Time(char *IP, char *PORT)
+{
+	int connect_state = 0;
+	int AT_state = 0;
+	int count = 0;
+	char TCP_str[50] = "AT+CIPSTART=\"TCP\",\"";
+	strcat(TCP_str, IP);
+	strcat(TCP_str, "\",");
+	strcat(TCP_str, PORT);
+	strcat(TCP_str, "\r\n");
+	
+	// 阻塞等待建立成功消息
+	while (connect_state != 1) { 
+		
+		// 阻塞等待建立TCP连接
+		while ((AT_state != 2) && (AT_state != 1)&& (AT_state != -2)) {
+			if (count == 10) {
+				return FALSE;
+			}
+			OSTimeDlyHMSM(0,0,3,0);
+			AT_state = GSM_AT_Recall_Connect(TCP_str);
+			count++;			
+		}
+		if (AT_state != 2) {
+			connect_state = GSM_Receive_Data_Connect();
+		} else {
+			GSM_Receive_Data(&GPRS_Timer);
 		}
 	}
 	return TRUE;

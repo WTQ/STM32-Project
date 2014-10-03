@@ -16,8 +16,8 @@
 static OS_STK App_TaskStartStk[APP_TASK_START_STK_SIZE];
 static OS_STK App_LWIPStk[LWIP_TASK_STK_SIZE];
 static OS_STK App_GPRSStk[GPRS_TASK_STK_SIZE];
-static OS_STK App_MONITORStk[MONITOR_TASK_STK_SIZE];
-static OS_STK App_DSPStk[DSP_TASK_STK_SIZE];
+//static OS_STK App_MONITORStk[MONITOR_TASK_STK_SIZE];
+//static OS_STK App_DSPStk[DSP_TASK_STK_SIZE];
 // static OS_STK App_GSMStk[GSM_TASK_STK_SIZE];
 
 // 下一个发送的记录
@@ -61,24 +61,21 @@ static void App_TaskCreate(void)
 		App_GPRSStk, GPRS_TASK_STK_SIZE, NULL, OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
 		
 	// 创建GPRSSend监视的任务
-	OSTaskCreateExt(App_Monitor, NULL, (App_MONITORStk + MONITOR_TASK_STK_SIZE - 1), MONITOR_TASK_PRIO, MONITOR_TASK_PRIO, 
-		App_MONITORStk, MONITOR_TASK_STK_SIZE, NULL, OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
+//	OSTaskCreateExt(App_Monitor, NULL, (App_MONITORStk + MONITOR_TASK_STK_SIZE - 1), MONITOR_TASK_PRIO, MONITOR_TASK_PRIO, 
+//		App_MONITORStk, MONITOR_TASK_STK_SIZE, NULL, OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
 
 	// 建立DSP处理任务
-	OSTaskCreateExt(DSP_Task, NULL, (App_DSPStk + DSP_TASK_STK_SIZE - 1), DSP_TASK_PRIO, DSP_TASK_PRIO, 
-		App_DSPStk, DSP_TASK_STK_SIZE, NULL,  OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
+//	OSTaskCreateExt(DSP_Task, NULL, (App_DSPStk + DSP_TASK_STK_SIZE - 1), DSP_TASK_PRIO, DSP_TASK_PRIO, 
+//		App_DSPStk, DSP_TASK_STK_SIZE, NULL,  OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
 	
 	// 建立GSM发送的任务
 	// OSTaskCreateExt(GSM_Task, NULL, (App_GSMStk + GSM_TASK_STK_SIZE - 1), GSM_TASK_PRIO, GSM_TASK_PRIO, 
 	//	App_GSMStk, GSM_TASK_STK_SIZE, NULL,  OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
 }
 
-static void App_Monitor(void *p_arg)
+/*static void App_Monitor(void *p_arg)
 {
-while (1) {
-	OSTimeDlyHMSM(0,0,0,10);
-}
-/*	while (1) {
+	while (1) {
 		OSTaskSuspend(OS_PRIO_SELF);
 //		if (Task_Execute == EXECUTE) {
 		
@@ -94,8 +91,8 @@ while (1) {
 			
 //			Task_Execute = IDLE;
 //		}
-	}*/
-}
+	}
+}*/
 
 static void App_GPRSSend(void* p_arg)
 {
@@ -125,15 +122,19 @@ static void Send_Task(void)
 		return;
 	}
 	GPRS_Init();
+	
+//	if (!GPRS_Time("time.nist.gov","13")) {
+//		return;
+//	}	
 
-	if (!GPRS_TCP_Connect("202.204.81.57","80")) {
+	if (!GPRS_TCP_Connect("50.116.10.26","80")) {
 		return;
 	}
 	GPRSBuffer[0] = 0;
 	GSM_Get_Record(GPRSBuffer);
 	GPRS_TCP_Send(GPRSBuffer);
 	GSM_Receive_Record(&Receive);
-	Next_Record.Record_ID = Calculate(&Receive);
+	Next_Record.Record_ID = Calculate(&Receive) + 1;
 	GRRS_TCP_Closed();
 
 
@@ -141,30 +142,24 @@ static void Send_Task(void)
 	while (1) {
 		
 		
-		if(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
-			while(Next_Record.Record_ID < WMFlag.WM_Record_Last_ID) {
-				GPRS_TCP_Connect("202.204.81.57","80");
+		if(Next_Record.Record_ID <= WMFlag.WM_Record_Last_ID) {
+			while(Next_Record.Record_ID <= WMFlag.WM_Record_Last_ID) {
+				GPRS_TCP_Connect("50.116.10.26","80");
 				index = GetRecordIndexById(Next_Record.Record_ID);
 				GetRecord(&WMRecord, index);
 				GPRSBuffer[0] = 0;
 				GSM_Post_Record(GPRSBuffer, &WMRecord);
-//				len = strlen(GPRSBuffer);
-//				GPRSBuffer[len] = 0x1A;
-//				GPRSBuffer[len + 1] = '\0';
 				GPRS_TCP_Send(GPRSBuffer);
 				GSM_Receive_Record(&Receive); // @todo 未接到success要重传
 				GRRS_TCP_Closed();
 				Next_Record.Record_ID++;
 			}
 		} else {
-			GPRS_TCP_Connect("202.204.81.57","80");
+			GPRS_TCP_Connect("50.116.10.26","80");
 			GPRSBuffer[0] = 0;
 			GSM_Post_Beat(GPRSBuffer);
-//			len = strlen(GPRSBuffer);
-//			GPRSBuffer[len] = 0x1A;
-//			GPRSBuffer[len + 1] = '\0';
 			GPRS_TCP_Send(GPRSBuffer);
-			GSM_Receive_Record(&Receive); // @todo 未接到success要重传
+			GSM_Receive_Record(&Receive); // @todo 未接到beat要重传
 			GRRS_TCP_Closed();
 		}
 		OSTimeDlyHMSM(0, 0, 1, 0);
@@ -184,7 +179,7 @@ static void App_LWIP(void* p_arg)
 	}
 }
 
-static void DSP_Task(void *p_arg)
+/*static void DSP_Task(void *p_arg)
 {
 	while (1) {
 
@@ -196,4 +191,4 @@ static void DSP_Task(void *p_arg)
 			DSP_WMFINISH_FLAG = 0;
 		}
 	}
-}
+}*/

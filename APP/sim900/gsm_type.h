@@ -80,4 +80,9 @@ typedef enum _TASK_EXECUTE {
 	EXECUTE
 } TASK_EXECUTE;
 
+// GPRS校验时间结构体
+typedef struct _GPRS_TIME {
+	UINT8 Time[20];
+} GPRS_TIME;
+
 #endif

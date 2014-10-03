@@ -14,6 +14,7 @@
 #include "usr_usart2.h"
 #include "usr_server.h"
 
+
 // 相关全局变量
 Message_Data MessageData;
 uint8_t DSPState = DSP_STOPPING;
@@ -21,7 +22,7 @@ WM_Record g_WMRecord;
 extern struct tcp_pcb *gPcb;
 
 // 启动DSP处理task的信号量
-uint8_t DSP_FLAG;
+//uint8_t DSP_FLAG;
 
 // DSP让出task的信号量
 uint8_t DSP_WMFINISH_FLAG;
@@ -46,7 +47,7 @@ void DSP_Init(void)
 	MessageData.rDataLen = 0;
 	MessageData.sTime = 0;	
 	g_WMRecord.FrameNum = 0;
-	DSP_FLAG = 0;
+//	DSP_FLAG = 0;
 	DSP_WMFINISH_FLAG = 0;
 	
 	// 设置PA5管脚为高电平，LED灯灭
@@ -134,7 +135,7 @@ void PreHandle(void)
 		}
 	}
 	if (WM_NONE >= WM_FRAME_NONE) {
-		DSP_WMFINISH_FLAG = 1;
+//		DSP_WMFINISH_FLAG = 1;
 		WM_NONE = 0;
 	}
 	
@@ -155,15 +156,15 @@ void PreHandle(void)
 		return;
 	}
 	
-	DSP_FLAG = 1;
+//	DSP_FLAG = 1;
+	Handle_Water();
 }
 
 // 处理DSP传过来的水印数据
 void Handle_Water(void)
 {
 	uint8_t i, j, k;
-	
-	DSP_FLAG = 0; // 标志位置零
+//	DSP_FLAG = 0; // 标志位置零
 	if (mode_same(FrA, FrB, WM_GROUP_NUM) > WM_FINAL_MIN) {
 		if (N_WM == 0) {
 			N_EX = 0;

@@ -47,7 +47,7 @@ void GSM_Post_Record(char *Buffer, WM_Record *WMRecord)
 	int i = 0;
 	WMTempData[0] = '\0';
 	for (i = 0; i < 12; i ++) {
-		sprintf(str + i * 2 , "%x", WMRecord->WMData[i]);
+		sprintf(str + i * 2 , "%02x", WMRecord->WMData[i]);
 	}
 	str[24] = '\0';
 		
