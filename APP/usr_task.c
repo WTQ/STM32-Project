@@ -25,6 +25,8 @@ static Next_Send Next_Record = {0};
 
 TASK_EXECUTE Task_Execute = IDLE;
 
+extern GPRS_TIMESTAMP GPRS_Timestamp;
+
 OS_EVENT* Com1_Mbox;
 
 INT8U Task_Init(void)
@@ -125,8 +127,24 @@ static void Send_Task(void)
 	
 //	if (!GPRS_Time("time.nist.gov","13")) {
 //		return;
-//	}	
+//	}
+	
+	// 判断有没有时间戳记录
+	if (GPRS_Timestamp.Stamp[0] != '\0') {
+	 	if (!GPRS_TCP_Connect("50.116.10.26","80")) {
+			return;
+		}
+		GPRSBuffer[0] = 0;
+		GSM_Get_TimeStamp(GPRSBuffer);
+		GPRS_TCP_Send(GPRSBuffer);
+		GSM_Receive_Record(&Receive);
+		memcpy(GPRS_Timestamp.Stamp, Receive.Data, Receive.Data_Count);
+		GRRS_TCP_Closed();
 
+		Timer_Start();
+	}
+
+	// 获取当前传输水印记录号
 	if (!GPRS_TCP_Connect("50.116.10.26","80")) {
 		return;
 	}

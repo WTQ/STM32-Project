@@ -7,6 +7,8 @@
 
 extern 	OS_EVENT* Com1_Mbox;
 
+extern GPRS_TIMESTAMP GPRS_Timestamp;
+
 void post_data(char *buffer, char *name, char *value)
 {
 	strcat(buffer, name);
@@ -41,6 +43,16 @@ void GSM_Get_Record(char *buffer)
 	buffer[len + 1] = '\0';
 }
 
+void GSM_Get_TimeStamp(char *buffer)
+{
+	int len;
+	buffer[0] = '\0';
+	strcat(buffer, "GET /wm/getstamp HTTP/1.1\r\nHost: tx.te168.cn\r\nContent-Length: 0\r\n\r\n");
+	len = strlen(buffer);
+	buffer[len] = 0x1A;
+	buffer[len + 1] = '\0';
+}
+
 void GSM_Post_Record(char *Buffer, WM_Record *WMRecord)
 {
 	char WMTempData[100], strTemp[10], str[25];
@@ -63,7 +75,12 @@ void GSM_Post_Record(char *Buffer, WM_Record *WMRecord)
 	post_data(WMTempData, "FrameNum", strTemp);	
 	
 	post_data(WMTempData, "WMData", str);
-	
+
+	post_data(WMTempData, "WMStamp", (char *)GPRS_Timestamp.Stamp);
+
+	sprintf(strTemp, "%c", WMRecord->FinalTime); 
+	post_data(WMTempData, "WMRecord_FinalTime", strTemp);
+
 	post_http(Buffer, WMTempData);
 }
 

@@ -16,7 +16,7 @@ extern GSM_COMMAND_RECORD GSM_Command_Record;
 extern GSM_DATA_RECORD GSM_Data_Record;
 GSM_RECEIVE_RECORD Receive_AT;
 GSM_RECEIVE_RECORD Receive_Data;
-GPRS_TIME GPRS_Timer;
+extern GPRS_TIMESTAMP GPRS_Timestamp;
 
 bool GSM_AT_Only(char *data)
 {	
@@ -226,4 +226,9 @@ int Remove_CR(UINT8* Data, int count)
 		temp_c = temp_c - 2;
 	}
 	return temp_c;
+}
+
+void Timer_Start_base()
+{
+	 Timer_Start_core();
 }

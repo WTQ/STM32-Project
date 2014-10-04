@@ -18,20 +18,27 @@
 // 初始化TIM2、TIM3
 void GSM_CommandTimeInit(void);
 void GSM_DataTimeInit(void);
-// 启动并设置TIM2、TIM3
+void GSM_CountTimeInit(void);
+// 启动并设置TIM2、TIM3、TIM4
 void GSM_Set_TIM2(uint16_t cnt, uint16_t psc);
 void GSM_Set_TIM3(uint16_t cnt, uint16_t psc);
+void GSM_Set_TIM4(uint16_t cnt, uint16_t psc);
 // 启动命令处理等待超时
 void GSM_SetTimeCommand(void);;
 // 启动接收数据超时
 void GSM_SetTimeData(void);
+// 启动计时器超时
+void GSM_SetTimeCount(void);
 // 关闭TIM2
 void GSM_ShutTIMCommand(void);
 // 关闭TIM3
 void GSM_ShutTIMData(void);
+// 关闭TIM4
+void GSM_ShutTIMCount(void);
 // TIM更新事件处理
 void GSM_CommandTimeHandle(void);
 void GSM_DataTimeHandle(void);
+void GSM_CountTimeHandle(void);
 // USART_GPIO配置
 void GSM_USART_GPIO(void);
 // USART配置

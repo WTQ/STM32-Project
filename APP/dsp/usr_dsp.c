@@ -13,13 +13,14 @@
 #include "usr_flash.h"
 #include "usr_usart2.h"
 #include "usr_server.h"
-
+#include "gsm_driver.h"
 
 // 相关全局变量
 Message_Data MessageData;
 uint8_t DSPState = DSP_STOPPING;
 WM_Record g_WMRecord;
 extern struct tcp_pcb *gPcb;
+extern GPRS_TIMESTAMP GPRS_Timestamp;
 
 // 启动DSP处理task的信号量
 //uint8_t DSP_FLAG;
@@ -228,6 +229,7 @@ void WriteHandle(void)
 		// 帧数N_WM和似然水印Frsgn写入Flash
 		g_WMRecord.WMData = Frsgn;
 		g_WMRecord.FrameNum = N_WM * 2;
+		g_WMRecord.FinalTime = GPRS_Timestamp.Count;
 		WriteRecord(&g_WMRecord);
 		USART_SendRecord(&g_WMRecord);
 		TCP_SendRecord(gPcb, &g_WMRecord);
@@ -317,6 +319,7 @@ void Handle_Water(void)
 	} 
 	//不相同，则将之前的数据传出（显示出），并重新存储记录
 	if(g_WMRecord.FrameNum > 0) {
+		// g_WMRecord.FinalTime = GPRS_Timestamp.FinalTime;
 		WriteRecord(&g_WMRecord);
 		USART_SendRecord(&g_WMRecord);
 		TCP_SendRecord(gPcb, &g_WMRecord);
@@ -329,6 +332,7 @@ void Handle_Water(void)
 	//
 	g_WMRecord.WMData_ID = WM_ID;
 	g_WMRecord.FrameNum = DSP_FRAME_MUL;
+	// g_WMRecord.FinalTime = GPRS_Timestamp.FinalTime;
 	FrameNum = 0;	//队列伪清空
 	flag = 0;
 	////////////////////////////////////////////////////////

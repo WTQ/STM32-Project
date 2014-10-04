@@ -28,12 +28,15 @@
 #define RECORD_ID_MAX_LEN		4
 // 帧数长度
 #define FM_MAX_LEN				4
+// 结束时间长度
+#define FT_MAX_LEN				4
+
 // WM_Header长度
 #define WM_HEADER_LEN			(IDSTRING_MAX_LEN + 4)
 // WM_Data长度
 #define WM_DATA_LEN				(WMDATA_ID_MAX_LEN + WM_MAX_LEN)
 // WM_Record长度
-#define WM_RECORD_LEN			(RECORD_ID_MAX_LEN + WM_MAX_LEN + FM_MAX_LEN)
+#define WM_RECORD_LEN			(RECORD_ID_MAX_LEN + WM_MAX_LEN + FM_MAX_LEN + FT_MAX_LEN)
 
 // 水印数据结构体地址, 10*2K
 #define WM_DATA_ADDR_START		((uint32_t)0x08036000)
@@ -60,6 +63,7 @@ typedef struct _WM_Data {
 typedef struct _WM_Record {
 	uint32_t ID;
 	uint32_t FrameNum;
+	uint32_t FinalTime;
 	uint8_t *WMData;
 } WM_Record;
 

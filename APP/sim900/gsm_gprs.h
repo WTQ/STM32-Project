@@ -23,5 +23,7 @@ bool GPRS_TCP_Send(char *Data);
 bool GPRS_TCP_Receive(GSM_RECEIVE_RECORD *pReceive);
 // 关闭TCP连接
 void GRRS_TCP_Closed(void);
+// 开启计时器
+void Timer_Start(void);
 
 #endif
