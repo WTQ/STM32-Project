@@ -162,6 +162,14 @@ void TIM3_IRQHandler(void)
 	OSIntExit();
 }
 
+// TIM4中断服务程序，作为时间戳超时用
+void TIM4_IRQHandler(void)
+{
+	OSIntEnter();
+	GSM_CountTimeHandle();
+	OSIntExit();
+}
+
 void ETH_IRQHandler(void)
 {
 	OSIntEnter();
