@@ -15,6 +15,7 @@
 
 void post_data(char *buffer, char *name, char *value);
 void post_http(char *buffer, char *temp);
+void GSM_Get_TimeStamp(char *buffer); // 获取时间戳
 void GSM_Get_Record(char *buffer);
 void GSM_Post_Record(char *Buffer, WM_Record *record);
 void GSM_Post_Beat(char *Buffer); // 心跳包

@@ -2,6 +2,7 @@
  * FLASH操作相关封装
  * 
  * @author 王特
+ * 修改 矫东航
  */
  
 #include "main.h"
@@ -69,7 +70,7 @@ void SetWMHeader(void)
 	Usr_Flash_Write(WM_DATA_ADDR_START + IDSTRING_MAX_LEN, (uint8_t *)&WMHeader.FirstID, WMDATA_ID_MAX_LEN);
 }
 
-bool GetWM(WM_Data *WMData, int32_t index)
+bool GetWM(WM_Data *WMData, int8_t index)
 {
 	uint32_t Address;
 	if(index > WMFlag.WM_Data_Num || index < 0) {
@@ -140,7 +141,7 @@ void SetRecordHeader(void)
 	Usr_Flash_Write(WM_RECORD_ADDR_START + IDSTRING_MAX_LEN, (uint8_t *)&WMHeader.FirstID, RECORD_ID_MAX_LEN);
 }
 
-bool GetRecord(WM_Record *WMRecord, int32_t index)
+bool GetRecord(WM_Record *WMRecord, int8_t index)
 {
 	uint32_t Address;
 	if(index > WMFlag.WM_Record_Num || index < 0) {
@@ -149,8 +150,9 @@ bool GetRecord(WM_Record *WMRecord, int32_t index)
 	
 	Address = WM_RECORD_ADDR_START + WM_HEADER_LEN + WM_RECORD_LEN * index;
 	WMRecord->ID = *(uint32_t *) Address;													 // 利用地址取数据
-	WMRecord->WMData_ID = *(uint16_t *) (Address + RECORD_ID_MAX_LEN);
-	WMRecord->FrameNum = *(int16_t *)(Address + RECORD_ID_MAX_LEN + WMDATA_ID_MAX_LEN);
+	WMRecord->FrameNum = *(uint32_t *) (Address + RECORD_ID_MAX_LEN);
+	WMRecord->FinalTime = *(uint32_t *)(Address + RECORD_ID_MAX_LEN + FM_MAX_LEN);
+	WMRecord->WMData = (uint8_t *)(Address + RECORD_ID_MAX_LEN + FM_MAX_LEN + FT_MAX_LEN);
 
 	return TRUE;
 }
@@ -170,8 +172,9 @@ bool WriteRecord(WM_Record *WMRecord)
 	WMRecord->ID = NextId;
 	
 	Usr_Flash_Write(WMFlag.WM_Record_Address, (uint8_t *)&WMRecord->ID, RECORD_ID_MAX_LEN);
-	Usr_Flash_Write(WMFlag.WM_Record_Address + RECORD_ID_MAX_LEN, (uint8_t *)&WMRecord->WMData_ID, WMDATA_ID_MAX_LEN);
-	Usr_Flash_Write(WMFlag.WM_Record_Address + RECORD_ID_MAX_LEN + WMDATA_ID_MAX_LEN, (uint8_t *)&WMRecord->FrameNum, FM_MAX_LEN);
+	Usr_Flash_Write(WMFlag.WM_Record_Address + RECORD_ID_MAX_LEN, (uint8_t *)&WMRecord->FrameNum, FM_MAX_LEN);
+	Usr_Flash_Write(WMFlag.WM_Record_Address + RECORD_ID_MAX_LEN + FM_MAX_LEN, (uint8_t *)&WMRecord->FinalTime, FT_MAX_LEN);
+	Usr_Flash_Write(WMFlag.WM_Record_Address + RECORD_ID_MAX_LEN + FM_MAX_LEN + FT_MAX_LEN, (uint8_t *)WMRecord->WMData, WM_MAX_LEN);
 	
 	// 更新WMFlag标志
 	WMFlag.WM_Record_Address += WM_RECORD_LEN;

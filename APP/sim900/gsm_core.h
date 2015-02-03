@@ -33,5 +33,7 @@ void GSM_Core_Rx_Data(UINT8 data);
 // 超时处理函数
 void Timeout_Command(void);
 void Timeout_Data(void);
+void Timer_Start_core(void);
+void Timeout_Count(void);
 
 #endif

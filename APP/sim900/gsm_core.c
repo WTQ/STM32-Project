@@ -26,6 +26,7 @@
 GSM_STATUS_TRANS GSM_STATUS;
 GSM_COMMAND_RECORD GSM_Command_Record;
 GSM_DATA_RECORD GSM_Data_Record;
+extern GPRS_TIMESTAMP GPRS_Timestamp;
 
 //void GSM_Init(void)
 //{
@@ -186,3 +187,14 @@ void Timeout_Data(void)
 	// ¹Ø±ÕTIM3¶¨Ê±Æ÷
 	GSM_ShutTIMData();
 }
+
+void Timer_Start_core(void)
+{
+	GSM_SetTimeCount();
+}
+
+void Timeout_Count(void)
+{
+	GPRS_Timestamp.Count++;
+}
+

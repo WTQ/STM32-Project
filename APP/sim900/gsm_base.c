@@ -16,6 +16,7 @@ extern GSM_COMMAND_RECORD GSM_Command_Record;
 extern GSM_DATA_RECORD GSM_Data_Record;
 GSM_RECEIVE_RECORD Receive_AT;
 GSM_RECEIVE_RECORD Receive_Data;
+extern GPRS_TIMESTAMP GPRS_Timestamp;
 
 bool GSM_AT_Only(char *data)
 {	
@@ -78,6 +79,9 @@ int GSM_AT_Recall_Connect(char *data)
 		return FALSE;
 	}
 	// 上面函数已经去掉了首尾的\r\n，这里不用重复删除了
+	if (strncmp((char*)Receive_AT.Data, "OK\r\n\r\nCONNECT OK", strlen("OK\r\n\r\nCONNECT OK")) == 0) {
+		return 2;
+	}
 
 	if (strncmp((char*)Receive_AT.Data, "OK", strlen("OK")) == 0) {
 		return 1;
@@ -168,9 +172,14 @@ int GSM_Receive_Data_Connect(void)
 
 	Receive_Data.Data_Count = Remove_CR(Receive_Data.Data, Receive_Data.Data_Count);
 
-	if (strncmp((char*)Receive_Data.Data, "STATE: TCP CLOSED\r\n\r\nCONNECT FAIL", strlen("STATE: TCP CLOSED\r\n\r\nCONNECT FAIL")) == 0) {
+//	if (strncmp((char*)Receive_Data.Data, "STATE: TCP CLOSED\r\n\r\nCONNECT FAIL", strlen("STATE: TCP CLOSED\r\n\r\nCONNECT FAIL")) == 0) {
+//		return -1;
+//	}
+	
+	if (strncmp((char*)Receive_Data.Data, "STATE: TCP CLOSED", strlen("STATE: TCP CLOSED")) == 0) {
 		return -1;
 	}
+
 	if (strncmp((char*)Receive_Data.Data, "ALREADY CONNECT", strlen("ALREADY CONNECT")) == 0) {
 		return -2;
 	}
@@ -217,4 +226,9 @@ int Remove_CR(UINT8* Data, int count)
 		temp_c = temp_c - 2;
 	}
 	return temp_c;
+}
+
+void Timer_Start_base()
+{
+	 Timer_Start_core();
 }

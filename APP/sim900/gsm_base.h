@@ -33,6 +33,9 @@ bool GSM_Receive_Recall(char *waitstr);
 // 去除\r\n操作，返回当前Data长度
 int Remove_CR(UINT8* Data, int count);
 
+// 开启计时器
+void Timer_Start_base(void);
+
 extern TASK_EXECUTE Task_Execute;
 
 #endif
